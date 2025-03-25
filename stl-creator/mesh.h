@@ -15,10 +15,10 @@ class Mesh {
 	public:
 		Mesh() {}
 		
-		//三角形の追加
+		// Add a triangle
 		void add(Triangle t) { Triangles.push_back(t); }
 		
-		//頂点による，三角形の追加
+		// Add a triangle using vertices
 		void add(const Point3& vertex1, 
 				 const Point3& vertex2,
 				 const Point3& vertex3)
@@ -27,16 +27,16 @@ class Mesh {
 			Triangles.push_back(t);
 		}
 
-		//全て消去
+		// Clear all
 		void clear() { Triangles.clear(); }
 
-		//三角形の数を返す
+		// Return the number of triangles
 		int size() { return Triangles.size(); }
 
-		//拡大・縮小
+		// Scale
 		Mesh& scale(const Vec3& s)
 		{
-			//スケール値が0なら1にする
+			// If the scale value is 0, set it to 1
 			double x, y, z;
 			x = ((s.x()!=0) ? s.x() : 1);
 			y = ((s.y()!=0) ? s.y() : 1);
@@ -53,7 +53,7 @@ class Mesh {
 			return *this;
 		}
 
-		//移動
+		// Translate
 		Mesh& translate(const Vec3& trans)
 		{
 			Vec3 v1, v2, v3;
@@ -66,7 +66,7 @@ class Mesh {
 			return *this;
 		}
 
-		//回転
+		// Rotate
 		Mesh& rotate(double deg, const Vec3& n)
 		{
 			Vec3 v1, v2, v3;
@@ -79,7 +79,7 @@ class Mesh {
 			return *this;
 		}
 
-		//法線の反転
+		// Flip normals
 		Mesh& flip_normal()
 		{
 			for( auto& t : Triangles) {
@@ -88,7 +88,7 @@ class Mesh {
 			return *this;
 		}
 
-		//STLファイルの書き出し
+		// Write to STL file
 		void stl_write(const std::string& filename, const std::string& name="") const {
 			std::ofstream file(filename);
 
@@ -118,7 +118,7 @@ class Mesh {
 
 };
 
-//2つのメッシュを統合する
+// Merge two meshes
 inline Mesh operator+(const Mesh &m1, const Mesh &m2) {
 	Mesh m;
 	(m.Triangles).insert((m.Triangles).end(), (m1.Triangles).begin(), (m1.Triangles).end());
@@ -126,11 +126,11 @@ inline Mesh operator+(const Mesh &m1, const Mesh &m2) {
 	return m;
 }
 
-//四角形を，対角線で2つの三角形に分割して作る
+// Create a quadrilateral by dividing it into two triangles along the diagonal
 inline Mesh create_quadrilateral (const Point3& p1,
 					const Point3& p2,
-			   		const Point3& p3,
-			   		const Point3& p4)
+					const Point3& p3,
+					const Point3& p4)
 {
 	Mesh m;
 	m.add(p1, p2, p4);
@@ -138,7 +138,7 @@ inline Mesh create_quadrilateral (const Point3& p1,
 	return m;
 };
 
-//立方体の生成
+// Generate a cube
 inline Mesh create_cube ()
 {
 	Mesh m;
@@ -208,8 +208,8 @@ inline Mesh create_cube ()
 	return m;
 }
 
-//STLファイルの読み込み
-//(読み込みの成功判定は，ファイル読み込みができたかでしか判定していない．中身は関係ない．)
+// Read from STL file
+// (The success of reading is determined only by whether the file can be opened, not its contents.)
 inline Mesh stl_read(const std::string& filename) {
 	Mesh m;
 

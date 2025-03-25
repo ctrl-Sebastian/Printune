@@ -6,8 +6,8 @@
 #include "stb_image.h"
 #endif
 
-#define THICKNESS 100 //持ち手部分の長さ
-#define AMP 6 //スタンプの凹凸の長さ
+#define THICKNESS 100 // Length of the handle part
+#define AMP 6 // Length of the stamp's protrusion and indentation
 
 int main() {
 	unsigned char *image;
@@ -18,7 +18,8 @@ int main() {
 	Mesh mesh_cube, mesh_cube_mv;
 	Mesh mesh_base, mesh_stamp;
 
-	//スタンプの凹凸を作成
+	// Translate the stamp mesh to center it
+	mesh_stamp.translate(Vec3(0, 0, AMP / 2.0));
 	mesh_cube = create_cube();
 	for(int y = 0; y < height; y++) {
 		for(int x = 0; x < width; x++) {
@@ -32,12 +33,13 @@ int main() {
 	}
 	mesh_stamp.translate(Vec3(-0.5*(width-1), -0.5*(height-1), 0));
 
-	//スタンプの土台（持ち手部分）を作成
+	// Create the base of the stamp (handle part)
 	mesh_base = mesh_cube;
 	mesh_base.translate(Vec3(0, 0, -0.5));
 	mesh_base.scale(Vec3(width, height, THICKNESS));
 	
-	//スタンプと土台を統合
+	// Translate the stamp and base to align properly
+	mesh_stamp.translate(Vec3(0, 0, THICKNESS / 2.0));
 	mesh_stamp += mesh_base;
 
 	mesh_stamp.stl_write("stamp.stl");
