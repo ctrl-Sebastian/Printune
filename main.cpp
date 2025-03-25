@@ -1,5 +1,4 @@
-#include<iostream>
-using namespace std;
+#include <vec3.h>
 
 int main()
 {
