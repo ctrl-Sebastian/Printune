@@ -126,31 +126,6 @@ class TagifyApp(CTk):
         options_label = CTkLabel(self.left_panel, text="Customization Options", font=("Arial", 20))
         options_label.pack(pady=20, padx=10)
         
-        # Base model selection
-        CTkLabel(self.left_panel, text="Base Model:").pack(pady=(20,5), padx=10, anchor="w")
-        self.base_model_var = StringVar(value="Standard")
-        base_model_dropdown = CTkOptionMenu(
-            self.left_panel,
-            values=["Standard", "Rounded", "Square"],
-            variable=self.base_model_var,
-            command=self.update_model_preview
-        )
-        base_model_dropdown.pack(pady=5, padx=10, fill="x")
-        
-        # Add bar height slider
-        CTkLabel(self.left_panel, text="Bar Height Factor:").pack(pady=(20,5), padx=10, anchor="w")
-        self.bar_height_slider = CTkSlider(self.left_panel, from_=0.5, to=2.0, number_of_steps=15)
-        self.bar_height_slider.set(1.0)
-        self.bar_height_slider.configure(command=self.update_model_preview)
-        self.bar_height_slider.pack(pady=5, padx=10, fill="x")
-        
-        # Add bar width slider
-        CTkLabel(self.left_panel, text="Bar Width Factor:").pack(pady=(20,5), padx=10, anchor="w")
-        self.bar_width_slider = CTkSlider(self.left_panel, from_=0.5, to=2.0, number_of_steps=15)
-        self.bar_width_slider.set(1.0)
-        self.bar_width_slider.configure(command=self.update_model_preview)
-        self.bar_width_slider.pack(pady=5, padx=10, fill="x")
-        
         # Add an apply button
         generate_btn = CTkButton(
             self.left_panel, 
@@ -258,18 +233,8 @@ class TagifyApp(CTk):
             return None
 
         try:
-            # Get customization values
-            bar_height_factor = self.bar_height_slider.get()
-            bar_width_factor = self.bar_width_slider.get()
-            base_model_type = self.base_model_var.get()
 
-            # Import base model based on selection
-            if base_model_type == "Standard":
-                model = cq.importers.importStep('base_model.step')
-            elif base_model_type == "Rounded":
-                model = cq.importers.importStep('base_model.step')
-            else:  # Square
-                model = cq.importers.importStep('base_model.step')
+            model = cq.importers.importStep('base_model.step')
 
             # Modify model based on bar heights and customization settings
             curr_bar = 0
@@ -277,7 +242,7 @@ class TagifyApp(CTk):
                 model = (
                     model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
                     .sketch()
-                    .slot(9 / 5 * bar * bar_height_factor, 1 * bar_width_factor, 90)
+                    .slot(9 / 5 * bar, 1, 90)
                     .finalize()
                     .extrude(4)
                 )
@@ -294,18 +259,7 @@ class TagifyApp(CTk):
                 print("No data to generate model from")
                 return
             
-            # Get customization values
-            bar_height_factor = self.bar_height_slider.get()
-            bar_width_factor = self.bar_width_slider.get()
-            base_model_type = self.base_model_var.get()
-            
-            # Import base model based on selection
-            if base_model_type == "Standard":
-                model = cq.importers.importStep('base_model.step')
-            elif base_model_type == "Rounded":
-                model = cq.importers.importStep('base_model.step')
-            else:  # Square
-                model = cq.importers.importStep('base_model.step')
+            model = cq.importers.importStep('base_model.step')
             
             # Modify model based on bar heights and customization settings
             curr_bar = 0
@@ -313,7 +267,7 @@ class TagifyApp(CTk):
                 model = (
                     model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
                     .sketch()
-                    .slot(9 / 5 * bar * bar_height_factor, 1 * bar_width_factor, 90)
+                    .slot(9 / 5 * bar, 1, 90)
                     .finalize()
                     .extrude(4)
                 )
