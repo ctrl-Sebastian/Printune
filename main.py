@@ -1,99 +1,363 @@
 from customtkinter import *
-
 import cadquery as cq
 import requests
 import io
 from PIL import Image
 import utils
+import os
+import numpy as np
+from tkinter import Frame
 
-app = CTk()
-set_appearance_mode("dark")
-app.geometry("800x600")     
-app.title("Tagify")
+# Replace PyVista with VTK imports
+import vtk
 
-def submit_url():
-    URL = "https://www.spotifycodes.com/downloadCode.php?uri=jpeg%2F000000%2Fwhite%2F640%2Fspotify%3Aalbum%3A4m2880jivSbbyEGAKfITCa"
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+class TagifyApp(CTk):
+    def __init__(self):
+        super().__init__()
+        
+        # Set appearance
+        set_appearance_mode("dark")
+        
+        # Window setup
+        self.screen_width = self.winfo_screenwidth()
+        self.screen_height = self.winfo_screenheight()
+        
+        self.window_width = int(self.screen_width * 0.8)
+        self.window_height = int(self.screen_height * 0.8)
+        
+        x = (self.screen_width - self.window_width) // 2
+        y = (self.screen_height - self.window_height) // 2
+        
+        self.geometry(f"{self.window_width}x{self.window_height}+{x}+{y}")
+        self.title("Tagify")
+        
+        # Initialize frames
+        self.home_frame = None
+        self.customization_frame = None
+        
+        # Store data between frames
+        self.spotify_data = None
+        self.bar_heights = None
+        self.model = None
+        
+        # Create frames
+        self.create_frames()
+        self.show_home_page()
     
-    # GET INPUT URL
-    share_link = url_input.get()
-
-    data = utils.get_link_data(share_link)
-
-    if len(data) != 2:
-        print("Something went wrong while parsing the URL.")
-        exit(-1)
-
-
-    # DOWNLOAD SPOTIFY CODE SVG
-    code_URL = "https://www.spotifycodes.com/downloadCode.php?uri=jpeg%2F000000%2Fwhite%2F640%2Fspotify%3A" + data[0] + "%3A" + data[1]
-
-    r = requests.get(code_URL)
-
-    if not r.ok or not r.content:
-        print("Something went wrong while fetching the Spotify code.")
-        exit(-1)
-
-
-    # LOADING SVG
-    img = Image.open(io.BytesIO(r.content)).crop((160,0, 640-31, 160))
-    width, height = img.size
-
-    pix = img.load()
-
-
-    # GETTING BAR LENGTHS
-    bar_heights = []
-    max_height_of_single_bar = 0
-
-    for x in range(width):
-
-        at_bar = False
-        curr_height = 0
-
-        for y in range(height):
-            if pix[x,y][0] > 20 or pix[x,y][1] > 20 or pix[x,y][2] > 20:
-                at_bar = True
-                curr_height += 1
-
-        if at_bar and curr_height > max_height_of_single_bar:
-            max_height_of_single_bar = curr_height/20
-        elif not at_bar and max_height_of_single_bar > 0:
-            bar_heights.append(max_height_of_single_bar)
-            max_height_of_single_bar = 0
-
-    print(f"There are {len(bar_heights)} bars of heights {bar_heights}")
-
-
-    # EXTRUDING FROM BASE MODEL
-    model = cq.importers.importStep('base_model.step')
-
-    curr_bar = 0
-
-    for bar in bar_heights:
-        model = (
-            model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
-            .sketch()
-            .slot(9 / 5 * bar, 1, 90)
-            .finalize()
-            .extrude(4)
+    def create_frames(self):
+        # Create homepage frame
+        self.home_frame = CTkFrame(self, corner_radius=0, fg_color="transparent")
+        self.home_frame.grid(row=0, column=0, sticky="nsew")
+        
+        # Create title
+        title = CTkLabel(self.home_frame, text="Tagify", font=("Arial", 48))
+        title.place(relx=0.5, rely=0.4, anchor=CENTER)
+        
+        # Create URL input field
+        self.url_input = CTkEntry(
+            self.home_frame, 
+            placeholder_text="Enter URL", 
+            width=(self.window_width // 3),
+            height=40,
+            corner_radius=12,
+            font=("Arial", 14),
+            fg_color="gray20",
+            text_color="white",
+            border_width=2,
+            border_color="gray50"
         )
-        curr_bar += 1
+        self.url_input.place(relx=0.5, rely=0.5, anchor=CENTER)
+        
+        # Create submit button
+        submit_url_btn = CTkButton(
+            self.home_frame, 
+            text="Submit URL", 
+            command=self.process_url
+        )
+        submit_url_btn.place(relx=0.5, rely=0.55, anchor=CENTER)
+        
+        # Create developer info
+        developer_name = CTkLabel(
+            self.home_frame, 
+            text="Developed by Sebastian De Leon", 
+            font=("Arial", 12), 
+            cursor="hand2"
+        )
+        developer_name.place(relx=0.5, rely=0.8, anchor=CENTER)
+        developer_name.bind("<Button-1>", lambda e: utils.open_link("https://sebastiandeleonportfolio.vercel.app/"))
+        
+        # Create customization frame
+        self.customization_frame = CTkFrame(self, corner_radius=0, fg_color="transparent")
+        self.customization_frame.grid(row=0, column=0, sticky="nsew")
+        
+        # Configure grid for customization frame to have two columns
+        self.customization_frame.grid_columnconfigure(0, weight=1)
+        self.customization_frame.grid_columnconfigure(1, weight=1)
+        self.customization_frame.grid_rowconfigure(0, weight=1)
+        
+        # Create left panel (customization options)
+        self.left_panel = CTkFrame(self.customization_frame)
+        self.left_panel.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        
+        # Add some sample customization options (placeholder)
+        options_label = CTkLabel(self.left_panel, text="Customization Options", font=("Arial", 20))
+        options_label.pack(pady=20, padx=10)
+        
+        # Base model selection
+        CTkLabel(self.left_panel, text="Base Model:").pack(pady=(20,5), padx=10, anchor="w")
+        self.base_model_var = StringVar(value="Standard")
+        base_model_dropdown = CTkOptionMenu(
+            self.left_panel,
+            values=["Standard", "Rounded", "Square"],
+            variable=self.base_model_var,
+            command=self.update_model_preview
+        )
+        base_model_dropdown.pack(pady=5, padx=10, fill="x")
+        
+        # Add bar height slider
+        CTkLabel(self.left_panel, text="Bar Height Factor:").pack(pady=(20,5), padx=10, anchor="w")
+        self.bar_height_slider = CTkSlider(self.left_panel, from_=0.5, to=2.0, number_of_steps=15)
+        self.bar_height_slider.set(1.0)
+        self.bar_height_slider.configure(command=self.update_model_preview)
+        self.bar_height_slider.pack(pady=5, padx=10, fill="x")
+        
+        # Add bar width slider
+        CTkLabel(self.left_panel, text="Bar Width Factor:").pack(pady=(20,5), padx=10, anchor="w")
+        self.bar_width_slider = CTkSlider(self.left_panel, from_=0.5, to=2.0, number_of_steps=15)
+        self.bar_width_slider.set(1.0)
+        self.bar_width_slider.configure(command=self.update_model_preview)
+        self.bar_width_slider.pack(pady=5, padx=10, fill="x")
+        
+        # Add an apply button
+        generate_btn = CTkButton(
+            self.left_panel, 
+            text="Generate Model", 
+            command=self.generate_model
+        )
+        generate_btn.pack(pady=20, padx=10)
+        
+        # Add back button
+        back_btn = CTkButton(
+            self.left_panel, 
+            text="Back to Home", 
+            command=self.show_home_page
+        )
+        back_btn.pack(pady=5, padx=10)
+        
+        # Create right panel (preview)
+        self.right_panel = CTkFrame(self.customization_frame)
+        self.right_panel.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+        
+        # Add preview label
+        preview_label = CTkLabel(self.right_panel, text="Model Preview", font=("Arial", 20))
+        preview_label.pack(pady=20)
+        
+        # The model preview
+        self.preview_frame = CTkFrame(self.right_panel, fg_color="gray20")
+        self.preview_frame.pack(expand=True, fill="both", pady=10, padx=10)
+        
+        # Setup the VTK 3D viewer
+        self.setup_3d_viewer()
+            
+        # Configure grid for root window
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+    
+    def show_home_page(self):
+        # Show home page and hide customization page
+        self.customization_frame.grid_remove()
+        self.home_frame.grid()
+    
+    def show_customization_page(self):
+        # Show customization page and hide home page
+        self.home_frame.grid_remove()
+        self.customization_frame.grid()
+    
+    def process_url(self):
+        # Get URL from input field
+        share_link = self.url_input.get()
+        
+        # Process the URL to get Spotify data
+        data = utils.get_link_data(share_link)
+        
+        if len(data) != 2:
+            print("Something went wrong while parsing the URL.")
+            return
+        
+        # Store the data for later use
+        self.spotify_data = data
+        
+        # Download Spotify Code and process it to get bar heights
+        code_URL = f"https://www.spotifycodes.com/downloadCode.php?uri=jpeg%2F000000%2Fwhite%2F640%2Fspotify%3A{data[0]}%3A{data[1]}"
+        
+        r = requests.get(code_URL)
+        
+        if not r.ok or not r.content:
+            print("Something went wrong while fetching the Spotify code.")
+            return
+        
+        # Process image to get bar heights
+        img = Image.open(io.BytesIO(r.content)).crop((160, 0, 640-31, 160))
+        width, height = img.size
+        pix = img.load()
+        
+        bar_heights = []
+        max_height_of_single_bar = 0
+        
+        for x in range(width):
+            at_bar = False
+            curr_height = 0
+            
+            for y in range(height):
+                if pix[x,y][0] > 20 or pix[x,y][1] > 20 or pix[x,y][2] > 20:
+                    at_bar = True
+                    curr_height += 1
+            
+            if at_bar and curr_height > max_height_of_single_bar:
+                max_height_of_single_bar = curr_height/20
+            elif not at_bar and max_height_of_single_bar > 0:
+                bar_heights.append(max_height_of_single_bar)
+                max_height_of_single_bar = 0
+        
+        # Store bar heights for later use
+        self.bar_heights = bar_heights
+        
+        print(f"There are {len(bar_heights)} bars of heights {bar_heights}")
+        
+        # Switch to the customization page
+        self.show_customization_page()
+        
+        # Initialize the 3D preview
+        self.update_model_preview()
+    
+    def generate_model(self):
+        if not self.bar_heights:
+            print("No data to generate model from")
+            return
+        
+        # Get customization values
+        bar_height_factor = self.bar_height_slider.get()
+        bar_width_factor = self.bar_width_slider.get()
+        base_model_type = self.base_model_var.get()
+        
+        # Import base model based on selection
+        if base_model_type == "Standard":
+            model = cq.importers.importStep('base_model.step')
+        elif base_model_type == "Rounded":
+            model = cq.importers.importStep('base_model.step')
+        else:  # Square
+            model = cq.importers.importStep('base_model.step')
+        
+        # Modify model based on bar heights and customization settings
+        curr_bar = 0
+        for bar in self.bar_heights:
+            model = (
+                model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
+                .sketch()
+                .slot(9 / 5 * bar * bar_height_factor, 1 * bar_width_factor, 90)
+                .finalize()
+                .extrude(4)
+            )
+            curr_bar += 1
+        
+        # Export model
+        cq.exporters.export(model, 'model.stl')
+        print("Model exported as model.stl")
 
-    cq.exporters.export(model, 'model.stl')
-    print("Model exported as model.stl")
-    url_input.delete(0, 'end')
 
-title = CTkLabel(app, text="Tagify", font=("Arial", 48))
-title.place(relx=0.5, rely=0.4, anchor=CENTER)
+    def setup_3d_viewer(self):
+        """Set up Matplotlib 3D viewer in the preview frame"""
+        # Create a figure for the 3D plot
+        self.fig = plt.Figure(figsize=(5, 5), dpi=100)
+        self.fig.patch.set_facecolor('#1f1f1f')  # Dark background
+        self.ax = self.fig.add_subplot(111, projection='3d')
+        self.ax.set_facecolor('#1f1f1f')  # Dark background
+        
+        # Create canvas
+        self.canvas = FigureCanvasTkAgg(self.fig, self.preview_frame)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(fill="both", expand=True)
+        
+        # Set initial view
+        self.ax.set_title("Enter a Spotify URL to view model preview", color='white')
+        self.ax.set_axis_off()
+        
+    def update_model_preview(self, *args):
+        """Update the model preview using Matplotlib"""
+        if not self.bar_heights:
+            return
+            
+        try:
+            # Get customization values
+            bar_height_factor = self.bar_height_slider.get()
+            bar_width_factor = self.bar_width_slider.get()
+            base_model_type = self.base_model_var.get()
+            
+            # Generate model and export to STL
+            model = self.generate_model_without_export()
+            temp_stl_path = 'temp_preview.stl'
+            cq.exporters.export(model, temp_stl_path)
+            
+            # Clear the current axes for update
+            self.ax.clear()
+            
+            # Load the STL file
+            
+            
+            # Set view and labels
+            self.ax.set_title(f"Model Preview - {base_model_type}", color='white')
+            self.ax.set_axis_off()
+            self.ax.view_init(elev=30, azim=30)
+            
+            # Update the canvas
+            self.canvas.draw()
+            
+            # Clean up temporary file
+            if os.path.exists(temp_stl_path):
+                try:
+                    os.remove(temp_stl_path)
+                except:
+                    pass
+                    
+        except Exception as e:
+            print(f"Error updating preview: {e}")
+            
+    def generate_model_without_export(self):
+        """Generate the model but don't export it (for preview)"""
+        if not self.bar_heights:
+            return None
+        
+        # Get customization values
+        bar_height_factor = self.bar_height_slider.get()
+        bar_width_factor = self.bar_width_slider.get()
+        base_model_type = self.base_model_var.get()
+        
+        # Import base model based on selection
+        if base_model_type == "Standard":
+            model = cq.importers.importStep('base_model.step')
+        elif base_model_type == "Rounded":
+            model = cq.importers.importStep('base_model.step')
+        else:  # Square
+            model = cq.importers.importStep('base_model.step')
+        
+        # Modify model based on bar heights and customization settings
+        curr_bar = 0
+        for bar in self.bar_heights:
+            model = (
+                model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
+                .sketch()
+                .slot(9 / 5 * bar * bar_height_factor, 1 * bar_width_factor, 90)
+                .finalize()
+                .extrude(4)
+            )
+            curr_bar += 1
+        
+        return model
 
-url_input = CTkEntry(app, placeholder_text="Enter URL")
-url_input.place(relx=0.5, rely=0.5, anchor=CENTER)
-
-submit_url_btn = CTkButton(app, text="Submit URL", command=submit_url)
-submit_url_btn.place(relx=0.5, rely=0.55, anchor=CENTER)
-
-developer_name = CTkLabel(app, text="Developed by Sebastian De Leon", font=("Arial", 12))
-developer_name.place(relx=0.5, rely=0.8, anchor=CENTER)
-
-
-app.mainloop()
+if __name__ == "__main__":
+    app = TagifyApp()
+    app.mainloop()
