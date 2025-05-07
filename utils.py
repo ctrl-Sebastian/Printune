@@ -23,7 +23,8 @@ def get_link_data(link):
 
 def open_link(link):
     webbrowser.open(link)
-    
+
+
 # Test the function with your example URL
 #link = "https://open.spotify.com/intl-it/track/4R1bPIiMEr5xfejy05H7cW?si=eb7468028a9d410c"
 #data = get_link_data(link)

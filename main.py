@@ -8,13 +8,32 @@ import os
 import numpy as np
 from tkinter import Frame
 
-# Replace PyVista with VTK imports
-import vtk
+import tkinter as tk
+
+import pyvista as pv
+from pyvistaqt import BackgroundPlotter
+
+from vtk.tk.vtkTkRenderWindowInteractor import vtkTkRenderWindowInteractor
+from vtkmodules.vtkRenderingCore import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
+from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
+from vtkmodules.vtkIOGeometry import vtkSTLReader
+from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
+from vtkmodules.vtkRenderingOpenGL2 import vtkOpenGLRenderer
+from vtkmodules.vtkCommonColor import vtkNamedColors
+from vtkmodules.vtkFiltersSources import vtkCubeSource
+import vtkmodules.vtkInteractionStyle
+import vtkmodules.vtkRenderingFreeType
+from vtkmodules.vtkIOGeometry import vtkSTLReader
+from vtkmodules.vtkRenderingCore import vtkPolyDataMapper, vtkActor
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import pyvista as pv
+
 class TagifyApp(CTk):
     def __init__(self):
         super().__init__()
@@ -136,7 +155,7 @@ class TagifyApp(CTk):
         generate_btn = CTkButton(
             self.left_panel, 
             text="Generate Model", 
-            command=self.generate_model
+            command=self.export_model
         )
         generate_btn.pack(pady=20, padx=10)
         
@@ -157,11 +176,10 @@ class TagifyApp(CTk):
         preview_label.pack(pady=20)
         
         # The model preview
-        self.preview_frame = CTkFrame(self.right_panel, fg_color="gray20")
+        self.preview_frame = CTkFrame(self.right_panel, fg_color="gray50")
         self.preview_frame.pack(expand=True, fill="both", pady=10, padx=10)
         
-        # Setup the VTK 3D viewer
-        self.setup_3d_viewer()
+
             
         # Configure grid for root window
         self.grid_rowconfigure(0, weight=1)
@@ -234,129 +252,116 @@ class TagifyApp(CTk):
         # Initialize the 3D preview
         self.update_model_preview()
     
-    def generate_model(self):
+    def generate_model_without_export(self):
+        """Generate the model in memory without exporting it."""
         if not self.bar_heights:
-            print("No data to generate model from")
-            return
-        
-        # Get customization values
-        bar_height_factor = self.bar_height_slider.get()
-        bar_width_factor = self.bar_width_slider.get()
-        base_model_type = self.base_model_var.get()
-        
-        # Import base model based on selection
-        if base_model_type == "Standard":
-            model = cq.importers.importStep('base_model.step')
-        elif base_model_type == "Rounded":
-            model = cq.importers.importStep('base_model.step')
-        else:  # Square
-            model = cq.importers.importStep('base_model.step')
-        
-        # Modify model based on bar heights and customization settings
-        curr_bar = 0
-        for bar in self.bar_heights:
-            model = (
-                model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
-                .sketch()
-                .slot(9 / 5 * bar * bar_height_factor, 1 * bar_width_factor, 90)
-                .finalize()
-                .extrude(4)
-            )
-            curr_bar += 1
-        
-        # Export model
-        cq.exporters.export(model, 'model.stl')
-        print("Model exported as model.stl")
+            return None
 
-
-    def setup_3d_viewer(self):
-        """Set up Matplotlib 3D viewer in the preview frame"""
-        # Create a figure for the 3D plot
-        self.fig = plt.Figure(figsize=(5, 5), dpi=100)
-        self.fig.patch.set_facecolor('#1f1f1f')  # Dark background
-        self.ax = self.fig.add_subplot(111, projection='3d')
-        self.ax.set_facecolor('#1f1f1f')  # Dark background
-        
-        # Create canvas
-        self.canvas = FigureCanvasTkAgg(self.fig, self.preview_frame)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack(fill="both", expand=True)
-        
-        # Set initial view
-        self.ax.set_title("Enter a Spotify URL to view model preview", color='white')
-        self.ax.set_axis_off()
-        
-    def update_model_preview(self, *args):
-        """Update the model preview using Matplotlib"""
-        if not self.bar_heights:
-            return
-            
         try:
             # Get customization values
             bar_height_factor = self.bar_height_slider.get()
             bar_width_factor = self.bar_width_slider.get()
             base_model_type = self.base_model_var.get()
-            
-            # Generate model and export to STL
-            model = self.generate_model_without_export()
-            temp_stl_path = 'temp_preview.stl'
-            cq.exporters.export(model, temp_stl_path)
-            
-            # Clear the current axes for update
-            self.ax.clear()
-            
-            # Load the STL file
-            
-            
-            # Set view and labels
-            self.ax.set_title(f"Model Preview - {base_model_type}", color='white')
-            self.ax.set_axis_off()
-            self.ax.view_init(elev=30, azim=30)
-            
-            # Update the canvas
-            self.canvas.draw()
-            
-            # Clean up temporary file
-            if os.path.exists(temp_stl_path):
-                try:
-                    os.remove(temp_stl_path)
-                except:
-                    pass
-                    
+
+            # Import base model based on selection
+            if base_model_type == "Standard":
+                model = cq.importers.importStep('base_model.step')
+            elif base_model_type == "Rounded":
+                model = cq.importers.importStep('base_model.step')
+            else:  # Square
+                model = cq.importers.importStep('base_model.step')
+
+            # Modify model based on bar heights and customization settings
+            curr_bar = 0
+            for bar in self.bar_heights:
+                model = (
+                    model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
+                    .sketch()
+                    .slot(9 / 5 * bar * bar_height_factor, 1 * bar_width_factor, 90)
+                    .finalize()
+                    .extrude(4)
+                )
+                curr_bar += 1
+
+            return model
+
         except Exception as e:
-            print(f"Error updating preview: {e}")
-            
-    def generate_model_without_export(self):
-        """Generate the model but don't export it (for preview)"""
-        if not self.bar_heights:
+            print(f"Error generating model: {e}")
             return None
-        
-        # Get customization values
-        bar_height_factor = self.bar_height_slider.get()
-        bar_width_factor = self.bar_width_slider.get()
-        base_model_type = self.base_model_var.get()
-        
-        # Import base model based on selection
-        if base_model_type == "Standard":
-            model = cq.importers.importStep('base_model.step')
-        elif base_model_type == "Rounded":
-            model = cq.importers.importStep('base_model.step')
-        else:  # Square
-            model = cq.importers.importStep('base_model.step')
-        
-        # Modify model based on bar heights and customization settings
-        curr_bar = 0
-        for bar in self.bar_heights:
-            model = (
-                model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
-                .sketch()
-                .slot(9 / 5 * bar * bar_height_factor, 1 * bar_width_factor, 90)
-                .finalize()
-                .extrude(4)
-            )
-            curr_bar += 1
-        
-        return model
+            
+    def export_model(self):
+            if not self.bar_heights:
+                print("No data to generate model from")
+                return
+            
+            # Get customization values
+            bar_height_factor = self.bar_height_slider.get()
+            bar_width_factor = self.bar_width_slider.get()
+            base_model_type = self.base_model_var.get()
+            
+            # Import base model based on selection
+            if base_model_type == "Standard":
+                model = cq.importers.importStep('base_model.step')
+            elif base_model_type == "Rounded":
+                model = cq.importers.importStep('base_model.step')
+            else:  # Square
+                model = cq.importers.importStep('base_model.step')
+            
+            # Modify model based on bar heights and customization settings
+            curr_bar = 0
+            for bar in self.bar_heights:
+                model = (
+                    model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
+                    .sketch()
+                    .slot(9 / 5 * bar * bar_height_factor, 1 * bar_width_factor, 90)
+                    .finalize()
+                    .extrude(4)
+                )
+                curr_bar += 1
+            
+            # Export model
+            cq.exporters.export(model, 'model.stl')
+            print("Model exported as model.stl")
+            
+    def update_model_preview(self):
+        """Update the 3D preview in the preview frame."""
+        # Clear the preview frame
+        for widget in self.preview_frame.winfo_children():
+            widget.destroy()
+
+        # Generate the model in memory
+        model = self.generate_model_without_export()
+        if not model:
+            print("No model to preview.")
+            return
+
+        # Export the model to a temporary STL file
+        temp_stl_path = "temp_preview_model.stl"
+        cq.exporters.export(model, temp_stl_path)
+
+        # Use PyVista to render the STL file and save it as an image
+        plotter = pv.Plotter(off_screen=True)
+        plotter.add_mesh(pv.read(temp_stl_path), color="white")
+        plotter.set_background("black")
+        temp_image_path = "temp_preview_image.png"
+        plotter.screenshot(temp_image_path)
+        plotter.close()
+
+        # Display the image in the preview frame using matplotlib
+        fig = Figure(figsize=(5, 5), dpi=100)
+        ax = fig.add_subplot(111)
+        img = plt.imread(temp_image_path)
+        ax.imshow(img)
+        ax.axis("off")  # Hide axes
+
+        canvas = FigureCanvasTkAgg(fig, master=self.preview_frame)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(expand=True, fill="both", pady=10, padx=10)
+
+        # Clean up temporary files
+        os.remove(temp_stl_path)
+        os.remove(temp_image_path)
+
 
 if __name__ == "__main__":
     app = TagifyApp()
