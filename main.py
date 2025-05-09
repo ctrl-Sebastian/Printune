@@ -5,31 +5,9 @@ import io
 from PIL import Image
 import utils
 import os
-import numpy as np
-from tkinter import Frame
-
-import tkinter as tk
-
 import pyvista as pv
-from pyvistaqt import BackgroundPlotter
-
-from vtk.tk.vtkTkRenderWindowInteractor import vtkTkRenderWindowInteractor
-from vtkmodules.vtkRenderingCore import vtkRenderer, vtkRenderWindow, vtkRenderWindowInteractor, vtkActor
-from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
-from vtkmodules.vtkIOGeometry import vtkSTLReader
-from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
-from vtkmodules.vtkRenderingOpenGL2 import vtkOpenGLRenderer
-from vtkmodules.vtkCommonColor import vtkNamedColors
-from vtkmodules.vtkFiltersSources import vtkCubeSource
-import vtkmodules.vtkInteractionStyle
-import vtkmodules.vtkRenderingFreeType
-from vtkmodules.vtkIOGeometry import vtkSTLReader
-from vtkmodules.vtkRenderingCore import vtkPolyDataMapper, vtkActor
-
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pyvista as pv
@@ -234,7 +212,7 @@ class TagifyApp(CTk):
 
         try:
 
-            model = cq.importers.importStep('base_model.step')
+            model = cq.importers.importStep('./base_models/heart.step')
 
             # Modify model based on bar heights and customization settings
             curr_bar = 0
@@ -259,7 +237,7 @@ class TagifyApp(CTk):
                 print("No data to generate model from")
                 return
             
-            model = cq.importers.importStep('base_model.step')
+            model = cq.importers.importStep('./base_models/heart.step')
             
             # Modify model based on bar heights and customization settings
             curr_bar = 0
