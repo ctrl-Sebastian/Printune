@@ -212,7 +212,7 @@ class TagifyApp(CTk):
 
         try:
 
-            model = cq.importers.importStep('./base_models/heart.step')
+            model = cq.importers.importStep('./base_models/square.step')
 
             # Modify model based on bar heights and customization settings
             curr_bar = 0
@@ -237,7 +237,7 @@ class TagifyApp(CTk):
                 print("No data to generate model from")
                 return
             
-            model = cq.importers.importStep('./base_models/heart.step')
+            model = cq.importers.importStep('./base_models/square.step')
             
             # Modify model based on bar heights and customization settings
             curr_bar = 0
