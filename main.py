@@ -5,12 +5,12 @@ import io
 from PIL import Image
 import utils
 import os
-import pyvista as pv
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import pyvista as pv
+import glob
+from tkinter import filedialog
 
 class TagifyApp(CTk):
     def __init__(self):
@@ -40,6 +40,9 @@ class TagifyApp(CTk):
         self.spotify_data = None
         self.bar_heights = None
         self.model = None
+        self.selected_base_model = None
+        self.base_model_buttons = []
+        self.base_model_paths = []
         
         # Create frames
         self.create_frames()
@@ -103,6 +106,70 @@ class TagifyApp(CTk):
         # Add some sample customization options (placeholder)
         options_label = CTkLabel(self.left_panel, text="Customization Options", font=("Arial", 20))
         options_label.pack(pady=20, padx=10)
+        
+        # --- Base Model Selection ---
+        base_models_dir = "./base_models"
+        step_files = glob.glob(os.path.join(base_models_dir, "*.step"))
+        self.base_model_paths = step_files
+
+        base_model_btn_frame = CTkFrame(self.left_panel, fg_color="transparent")
+        base_model_btn_frame.pack(pady=10, padx=10, fill="x")
+
+        self.base_model_buttons = []
+        self.selected_base_model = step_files[0] if step_files else None
+
+        def on_base_model_select(idx):
+            self.selected_base_model = self.base_model_paths[idx]
+            for i, btn in enumerate(self.base_model_buttons):
+                btn.configure(border_color="green" if i == idx else "gray50")
+            self.update_model_preview()
+
+        for idx, step_path in enumerate(step_files):
+            # Try to find a preview image with the same name as the step file
+            img_path = os.path.splitext(step_path)[0] + ".png"
+            if os.path.exists(img_path):
+                img = Image.open(img_path).resize((60, 60))
+            else:
+                img = Image.new("RGB", (60, 60), color="gray")
+            tk_img = CTkImage(light_image=img, dark_image=img, size=(60, 60))
+            btn = CTkButton(
+                base_model_btn_frame,
+                image=tk_img,
+                text="",
+                width=64,
+                height=64,
+                fg_color="gray20",
+                border_width=3,
+                border_color="green" if idx == 0 else "gray50",
+                command=lambda i=idx: on_base_model_select(i)
+            )
+            btn.pack(side="left", padx=5)
+            self.base_model_buttons.append(btn)
+
+        # Button to load a custom .step file
+        def load_custom_step():
+            file_path = filedialog.askopenfilename(
+                title="Select STEP file",
+                filetypes=[("STEP files", "*.step")]
+            )
+            if file_path:
+                self.selected_base_model = file_path
+                for btn in self.base_model_buttons:
+                    btn.configure(border_color="gray50")
+                self.update_model_preview()
+
+        load_custom_btn = CTkButton(
+            base_model_btn_frame,
+            text="+",
+            width=64,
+            height=64,
+            fg_color="gray20",
+            border_width=3,
+            border_color="gray50",
+            command=load_custom_step
+        )
+        load_custom_btn.pack(side="left", padx=5)
+        # --- End Base Model Selection ---
         
         # Add an apply button
         generate_btn = CTkButton(
@@ -207,12 +274,11 @@ class TagifyApp(CTk):
     
     def generate_model_without_export(self):
         """Generate the model in memory without exporting it."""
-        if not self.bar_heights:
+        if not self.bar_heights or not self.selected_base_model:
             return None
 
         try:
-
-            model = cq.importers.importStep('./base_models/square.step')
+            model = cq.importers.importStep(self.selected_base_model)
 
             # Modify model based on bar heights and customization settings
             curr_bar = 0
@@ -233,11 +299,11 @@ class TagifyApp(CTk):
             return None
             
     def export_model(self):
-            if not self.bar_heights:
+            if not self.bar_heights or not self.selected_base_model:
                 print("No data to generate model from")
                 return
             
-            model = cq.importers.importStep('./base_models/square.step')
+            model = cq.importers.importStep(self.selected_base_model)
             
             # Modify model based on bar heights and customization settings
             curr_bar = 0
