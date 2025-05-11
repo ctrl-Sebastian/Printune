@@ -5,7 +5,7 @@ import io
 from PIL import Image
 import utils
 import os
-
+import pyvista as pv
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -96,12 +96,13 @@ class TagifyApp(CTk):
         
         # Configure grid for customization frame to have two columns
         self.customization_frame.grid_columnconfigure(0, weight=1)
-        self.customization_frame.grid_columnconfigure(1, weight=1)
+        self.customization_frame.grid_columnconfigure(1, weight=2)
         self.customization_frame.grid_rowconfigure(0, weight=1)
         
         # Create left panel (customization options)
         self.left_panel = CTkFrame(self.customization_frame)
         self.left_panel.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.left_panel.grid_rowconfigure(2, weight=1)  # For base model grid to expand
         
         # Add some sample customization options (placeholder)
         options_label = CTkLabel(self.left_panel, text="Customization Options", font=("Arial", 20))
@@ -112,8 +113,12 @@ class TagifyApp(CTk):
         step_files = glob.glob(os.path.join(base_models_dir, "*.step"))
         self.base_model_paths = step_files
 
+        # Responsive button/image size
+        btn_size = min(max(self.window_width // 15, 80), 120)  # Clamp between 80 and 160
+
         base_model_btn_frame = CTkFrame(self.left_panel, fg_color="transparent")
-        base_model_btn_frame.pack(pady=10, padx=10, fill="x")
+        base_model_btn_frame.pack(pady=0, padx=0, fill="both", expand=True)
+        base_model_btn_frame.grid_columnconfigure((0, 1, 2), weight=1)  # 3 columns
 
         self.base_model_buttons = []
         self.selected_base_model = step_files[0] if step_files else None
@@ -128,25 +133,34 @@ class TagifyApp(CTk):
             # Try to find a preview image with the same name as the step file
             img_path = os.path.splitext(step_path)[0] + ".png"
             if os.path.exists(img_path):
-                img = Image.open(img_path).resize((60, 60))
+                img = Image.open(img_path)
+                # Crop to square
+                w, h = img.size
+                min_dim = min(w, h)
+                left = (w - min_dim) // 2
+                top = (h - min_dim) // 2
+                img = img.crop((left, top, left + min_dim, top + min_dim))
+                img = img.resize((btn_size, btn_size))
             else:
-                img = Image.new("RGB", (60, 60), color="gray")
-            tk_img = CTkImage(light_image=img, dark_image=img, size=(60, 60))
+                img = Image.new("RGB", (btn_size, btn_size), color="gray")
+            tk_img = CTkImage(light_image=img, dark_image=img, size=(btn_size, btn_size))
             btn = CTkButton(
                 base_model_btn_frame,
                 image=tk_img,
-                text="",
-                width=64,
-                height=64,
+                text=step_path,
+                width=btn_size,
+                height=btn_size,
                 fg_color="gray20",
                 border_width=3,
                 border_color="green" if idx == 0 else "gray50",
                 command=lambda i=idx: on_base_model_select(i)
             )
-            btn.pack(side="left", padx=5)
+            row, col = divmod(idx, 3)
+            btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             self.base_model_buttons.append(btn)
+            base_model_btn_frame.grid_rowconfigure(row, weight=1)
 
-        # Button to load a custom .step file
+        # Button to load a custom .step file (always last, next row if needed)
         def load_custom_step():
             file_path = filedialog.askopenfilename(
                 title="Select STEP file",
@@ -158,17 +172,20 @@ class TagifyApp(CTk):
                     btn.configure(border_color="gray50")
                 self.update_model_preview()
 
+        custom_btn_idx = len(step_files)
+        row, col = divmod(custom_btn_idx, 3)
         load_custom_btn = CTkButton(
             base_model_btn_frame,
             text="+",
-            width=64,
-            height=64,
+            width=btn_size,
+            height=btn_size,
             fg_color="gray20",
             border_width=3,
             border_color="gray50",
             command=load_custom_step
         )
-        load_custom_btn.pack(side="left", padx=5)
+        load_custom_btn.grid(row=row, column=col, sticky="nsew")
+        base_model_btn_frame.grid_rowconfigure(row, weight=1)
         # --- End Base Model Selection ---
         
         # Add an apply button
@@ -190,6 +207,8 @@ class TagifyApp(CTk):
         # Create right panel (preview)
         self.right_panel = CTkFrame(self.customization_frame)
         self.right_panel.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+        self.right_panel.grid_rowconfigure(1, weight=1)
+        self.right_panel.grid_columnconfigure(0, weight=1)
         
         # Add preview label
         preview_label = CTkLabel(self.right_panel, text="Model Preview", font=("Arial", 20))
@@ -199,11 +218,81 @@ class TagifyApp(CTk):
         self.preview_frame = CTkFrame(self.right_panel, fg_color="gray50")
         self.preview_frame.pack(expand=True, fill="both", pady=10, padx=10)
         
-
-            
         # Configure grid for root window
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
+
+        # Make app respond to window resizing
+        self.bind("<Configure>", self.on_resize)
+    
+    def on_resize(self, event):
+        # Redraw base model buttons with new size if window size changes significantly
+        new_btn_size = min(max(self.winfo_width() // 15, 80), 160)
+        if hasattr(self, "_last_btn_size") and self._last_btn_size == new_btn_size:
+            return
+        self._last_btn_size = new_btn_size
+        # Re-create base model buttons with new size
+        # Remove old buttons
+        for btn in getattr(self, "base_model_buttons", []):
+            btn.destroy()
+        # Remove custom button if exists
+        if hasattr(self, "load_custom_btn"):
+            self.load_custom_btn.destroy()
+        # Recreate buttons
+        base_model_btn_frame = self.left_panel.winfo_children()[1]
+        for widget in base_model_btn_frame.winfo_children():
+            widget.destroy()
+        base_model_btn_frame.grid_columnconfigure((0, 1, 2), weight=1)
+        for idx, step_path in enumerate(self.base_model_paths):
+            img_path = os.path.splitext(step_path)[0] + ".png"
+            if os.path.exists(img_path):
+                img = Image.open(img_path)
+                w, h = img.size
+                min_dim = min(w, h)
+                left = (w - min_dim) // 2
+                top = (h - min_dim) // 2
+                img = img.crop((left, top, left + min_dim, top + min_dim))
+                img = img.resize((new_btn_size, new_btn_size))
+            else:
+                img = Image.new("RGB", (new_btn_size, new_btn_size), color="gray")
+            tk_img = CTkImage(light_image=img, dark_image=img, size=(new_btn_size, new_btn_size))
+            btn = CTkButton(
+                base_model_btn_frame,
+                image=tk_img,
+                text="",
+                width=new_btn_size + 4,
+                height=new_btn_size + 4,
+                fg_color="gray20",
+                border_width=3,
+                border_color="green" if self.selected_base_model == self.base_model_paths[idx] else "gray50",
+                command=lambda i=idx: self._on_base_model_select_resize(i)
+            )
+            row, col = divmod(idx, 3)
+            btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+            self.base_model_buttons[idx] = btn
+            base_model_btn_frame.grid_rowconfigure(row, weight=1)
+        # Custom button
+        custom_btn_idx = len(self.base_model_paths)
+        row, col = divmod(custom_btn_idx, 3)
+        load_custom_btn = CTkButton(
+            base_model_btn_frame,
+            text="+",
+            width=new_btn_size + 4,
+            height=new_btn_size + 4,
+            fg_color="gray20",
+            border_width=3,
+            border_color="gray50",
+            command=self.base_model_buttons[0].cget("command") if self.base_model_buttons else None
+        )
+        load_custom_btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+        self.load_custom_btn = load_custom_btn
+        base_model_btn_frame.grid_rowconfigure(row, weight=1)
+
+    def _on_base_model_select_resize(self, idx):
+        self.selected_base_model = self.base_model_paths[idx]
+        for i, btn in enumerate(self.base_model_buttons):
+            btn.configure(border_color="green" if i == idx else "gray50")
+        self.update_model_preview()
     
     def show_home_page(self):
         # Show home page and hide customization page
@@ -299,28 +388,38 @@ class TagifyApp(CTk):
             return None
             
     def export_model(self):
-            if not self.bar_heights or not self.selected_base_model:
-                print("No data to generate model from")
-                return
-            
-            model = cq.importers.importStep(self.selected_base_model)
-            
-            # Modify model based on bar heights and customization settings
-            curr_bar = 0
-            for bar in self.bar_heights:
-                model = (
-                    model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
-                    .sketch()
-                    .slot(9 / 5 * bar, 1, 90)
-                    .finalize()
-                    .extrude(4)
-                )
-                curr_bar += 1
-            
-            # Export model
-            cq.exporters.export(model, 'model.stl')
-            print("Model exported as model.stl")
-            
+        if not self.bar_heights or not self.selected_base_model:
+            print("No data to generate model from")
+            return
+        
+        model = cq.importers.importStep(self.selected_base_model)
+        
+        # Modify model based on bar heights and customization settings
+        curr_bar = 0
+        for bar in self.bar_heights:
+            model = (
+                model.pushPoints([(15.5 + curr_bar * 1.88, 7.5)])
+                .sketch()
+                .slot(9 / 5 * bar, 1, 90)
+                .finalize()
+                .extrude(4)
+            )
+            curr_bar += 1
+        
+        # Ask user for save location
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".stl",
+            filetypes=[("STL files", "*.stl")],
+            title="Save Model As"
+        )
+        if not file_path:
+            print("Export cancelled.")
+            return
+
+        # Export model
+        cq.exporters.export(model, file_path, exportType='STL')
+        print(f"Model exported as {file_path}")
+
     def update_model_preview(self):
         """Update the 3D preview in the preview frame."""
         # Clear the preview frame
