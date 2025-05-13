@@ -54,8 +54,10 @@ class TagifyApp(CTk):
         self.home_frame.grid(row=0, column=0, sticky="nsew")
         
         # Create title
-        title = CTkLabel(self.home_frame, text="Tagify", font=("Arial", 48))
+        title = CTkLabel(self.home_frame, text="Tagify", font=("Arial bold", 64), text_color="#1ED760")
         title.place(relx=0.5, rely=0.4, anchor=CENTER)
+
+
         
         # Create URL input field
         self.url_input = CTkEntry(
@@ -64,9 +66,9 @@ class TagifyApp(CTk):
             width=(self.window_width // 3),
             height=40,
             corner_radius=12,
-            font=("Arial", 14),
+            font=("Arial bold", 18),
             fg_color="gray20",
-            text_color="white",
+            text_color="#1ED760",
             border_width=2,
             border_color="gray50"
         )
@@ -75,19 +77,27 @@ class TagifyApp(CTk):
         # Create submit button
         submit_url_btn = CTkButton(
             self.home_frame, 
-            text="Submit URL", 
+            text="Submit URL",
+            font=("Arial bold", 18),
+            fg_color="transparent",
+            border_width=2,
+            hover_color="#1ED760",
+            border_color="#1ED760",
+            text_color="white",
+            height=40,
+            width=(self.window_width // 4),
             command=self.process_url
         )
-        submit_url_btn.place(relx=0.5, rely=0.55, anchor=CENTER)
+        submit_url_btn.place(relx=0.5, rely=0.65, anchor=CENTER)
         
         # Create developer info
         developer_name = CTkLabel(
             self.home_frame, 
             text="Developed by Sebastian De Leon", 
-            font=("Arial", 12), 
+            font=("Arial", 16),
             cursor="hand2"
         )
-        developer_name.place(relx=0.5, rely=0.8, anchor=CENTER)
+        developer_name.place(relx=0.5, rely=0.9, anchor=CENTER)
         developer_name.bind("<Button-1>", lambda e: utils.open_link("https://sebastiandeleonportfolio.vercel.app/"))
         
         # Create customization frame
@@ -114,7 +124,7 @@ class TagifyApp(CTk):
         self.base_model_paths = step_files
 
         # Responsive button/image size
-        btn_size = min(max(self.window_width // 15, 80), 120)  # Clamp between 80 and 160
+        btn_size = min(max(self.window_width // 15, 80), 100)  # Clamp between 80 and 160
 
         base_model_btn_frame = CTkFrame(self.left_panel, fg_color="transparent")
         base_model_btn_frame.pack(pady=0, padx=0, fill="both", expand=True)
@@ -148,8 +158,8 @@ class TagifyApp(CTk):
                 base_model_btn_frame,
                 image=tk_img,
                 text=step_path,
-                width=btn_size,
-                height=btn_size,
+                width=40,
+                height=40,
                 fg_color="gray20",
                 border_width=3,
                 border_color="green" if idx == 0 else "gray50",
@@ -191,7 +201,15 @@ class TagifyApp(CTk):
         # Add an apply button
         generate_btn = CTkButton(
             self.left_panel, 
-            text="Generate Model", 
+            text="Generate Model",
+            font=("Arial bold", 18),
+            fg_color="transparent",
+            border_width=2,
+            hover_color="#1ED760",
+            border_color="#1ED760",
+            text_color="white",
+            width=self.left_panel.winfo_width() // 2,
+            height=20,
             command=self.export_model
         )
         generate_btn.pack(pady=20, padx=10)
@@ -199,7 +217,14 @@ class TagifyApp(CTk):
         # Add back button
         back_btn = CTkButton(
             self.left_panel, 
-            text="Back to Home", 
+            text="Back to Home",
+            font=("Arial bold", 18),
+            fg_color="#1ED760",
+            border_width=2,
+            border_color="#1ED760",
+            text_color="white",
+            width=self.left_panel.winfo_width()// 2,
+            height=20,
             command=self.show_home_page
         )
         back_btn.pack(pady=5, padx=10)
