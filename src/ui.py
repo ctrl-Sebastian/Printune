@@ -25,6 +25,7 @@ class TagifyApp(CTk):
     def __init__(self):
         super().__init__()
         set_appearance_mode("dark")
+        self.iconbitmap(utils.resource_path("icon.ico"))
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
         self.window_width = int(self.screen_width * 0.8)
@@ -118,7 +119,7 @@ class TagifyApp(CTk):
         options_label.pack(pady=20, padx=10)
         
         # --- Base Model Selection ---
-        base_models_dir = "./base_models"
+        base_models_dir = utils.resource_path("base_models")
         self.base_models_dir = base_models_dir  # Store for later use
         self.base_models_per_page = 6  # Number of models per page
         self.base_model_page = 0  # Current page
@@ -522,7 +523,7 @@ class TagifyApp(CTk):
         """Display a loading GIF in the preview frame (optimized for speed)."""
         for widget in self.preview_frame.winfo_children():
             widget.destroy()
-        gif_path = os.path.join("assets", "loading.gif")
+        gif_path = utils.resource_path("..\\assets\\loading.gif")
         if not os.path.exists(gif_path):
             label = CTkLabel(self.preview_frame, text="Loading...", font=("Arial", 18))
             label.pack(expand=True)
@@ -576,7 +577,7 @@ class TagifyApp(CTk):
                 return
 
             # Export the model to a temporary STL file
-            temp_stl_path = "temp_preview_model.stl"
+            temp_stl_path = utils.resource_path("temp_preview_model.stl")
             modeling.export_model(model, temp_stl_path)
 
             # Use PyVista to render the STL file and save it as an image
