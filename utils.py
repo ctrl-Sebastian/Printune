@@ -1,4 +1,14 @@
+"""
+utils.py - Utility functions for Tagify.
+"""
+
 import webbrowser
+
+def open_link(url):
+    """
+    Open the given URL in the default web browser.
+    """
+    webbrowser.open(url)
 
 def get_link_data(link):
     """
@@ -20,12 +30,3 @@ def get_link_data(link):
 
     # If no match is found, return None
     return None
-
-def open_link(link):
-    webbrowser.open(link)
-
-
-# Test the function with your example URL
-#link = "https://open.spotify.com/intl-it/track/4R1bPIiMEr5xfejy05H7cW?si=eb7468028a9d410c"
-#data = get_link_data(link)
-#print(data)

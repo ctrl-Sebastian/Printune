@@ -2,7 +2,7 @@ from customtkinter import *
 import cadquery as cq
 import requests
 import io
-from PIL import Image
+from PIL import Image, ImageTk
 import utils
 import os
 import pyvista as pv
@@ -11,6 +11,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import glob
 from tkinter import filedialog
+import threading
 
 class TagifyApp(CTk):
     def __init__(self):
@@ -82,6 +83,7 @@ class TagifyApp(CTk):
             fg_color="transparent",
             border_width=2,
             hover_color="#1ED760",
+            corner_radius=12,
             border_color="#1ED760",
             text_color="white",
             height=40,
@@ -120,82 +122,183 @@ class TagifyApp(CTk):
         
         # --- Base Model Selection ---
         base_models_dir = "./base_models"
-        step_files = glob.glob(os.path.join(base_models_dir, "*.step"))
-        self.base_model_paths = step_files
+        self.base_models_dir = base_models_dir  # Store for later use
+        self.base_models_per_page = 6  # Number of models per page
+        self.base_model_page = 0  # Current page
 
-        # Responsive button/image size
-        btn_size = min(max(self.window_width // 15, 80), 100)  # Clamp between 80 and 160
+        def scan_base_models():
+            step_files = glob.glob(os.path.join(self.base_models_dir, "*.step"))
+            self.base_model_paths = step_files
+            return step_files
 
         base_model_btn_frame = CTkFrame(self.left_panel, fg_color="transparent")
-        base_model_btn_frame.pack(pady=0, padx=0, fill="both", expand=True)
+        base_model_btn_frame.pack(pady=0, padx=0, fill="none", expand=True)
         base_model_btn_frame.grid_columnconfigure((0, 1, 2), weight=1)  # 3 columns
+        self.base_model_btn_frame = base_model_btn_frame  # Store reference
 
-        self.base_model_buttons = []
-        self.selected_base_model = step_files[0] if step_files else None
+        # Do NOT create any base model buttons here!
+        # Only call update_base_model_buttons() after scan_base_models()
 
-        def on_base_model_select(idx):
-            self.selected_base_model = self.base_model_paths[idx]
-            for i, btn in enumerate(self.base_model_buttons):
-                btn.configure(border_color="green" if i == idx else "gray50")
-            self.update_model_preview()
+        def update_base_model_buttons():
+            # Only destroy base model buttons (not the whole left panel)
+            for btn in getattr(self, "base_model_buttons", []):
+                btn.destroy()
+            self.base_model_buttons = []
+            # Remove custom button if exists
+            if hasattr(self, "load_custom_btn"):
+                self.load_custom_btn.destroy()
+            # Remove pagination buttons if exist
+            if hasattr(self, "pagination_frame"):
+                self.pagination_frame.destroy()
 
-        for idx, step_path in enumerate(step_files):
-            # Try to find a preview image with the same name as the step file
-            img_path = os.path.splitext(step_path)[0] + ".png"
-            if os.path.exists(img_path):
-                img = Image.open(img_path)
-                # Crop to square
-                w, h = img.size
-                min_dim = min(w, h)
-                left = (w - min_dim) // 2
-                top = (h - min_dim) // 2
-                img = img.crop((left, top, left + min_dim, top + min_dim))
-                img = img.resize((btn_size, btn_size))
-            else:
-                img = Image.new("RGB", (btn_size, btn_size), color="gray")
-            tk_img = CTkImage(light_image=img, dark_image=img, size=(btn_size, btn_size))
-            btn = CTkButton(
+            step_files = scan_base_models()
+            total_pages = max(1, (len(step_files) + self.base_models_per_page - 1) // self.base_models_per_page)
+            self.base_model_page = min(self.base_model_page, total_pages - 1)
+            start_idx = self.base_model_page * self.base_models_per_page
+            end_idx = start_idx + self.base_models_per_page
+            page_files = step_files[start_idx:end_idx]
+
+            btn_size = min(max(self.window_width // 15, 80), 100)
+            base_model_btn_frame = self.base_model_btn_frame  # Use stored reference
+            # Only destroy button widgets in the frame (not the frame itself)
+            for widget in base_model_btn_frame.winfo_children():
+                widget.destroy()
+            base_model_btn_frame.grid_columnconfigure((0, 1, 2), weight=1)
+            for idx, step_path in enumerate(page_files):
+                img_path = os.path.splitext(step_path)[0] + ".png"
+                if os.path.exists(img_path):
+                    img = Image.open(img_path)
+                    w, h = img.size
+                    min_dim = min(w, h)
+                    left = (w - min_dim) // 2
+                    top = (h - min_dim) // 2
+                    img = img.crop((left, top, left + min_dim, top + min_dim))
+                    img = img.resize((btn_size, btn_size))
+                else:
+                    img = Image.new("RGB", (btn_size, btn_size), color="gray")
+                tk_img = CTkImage(light_image=img, dark_image=img, size=(btn_size, btn_size))
+                btn = CTkButton(
+                    base_model_btn_frame,
+                    image=tk_img,
+                    text="",
+                    width=btn_size,
+                    height=btn_size,
+                    fg_color="gray20",
+                    border_width=2,
+                    corner_radius=12,
+                    border_color="green" if self.selected_base_model == step_path else "gray50",
+                    command=lambda i=start_idx+idx: on_base_model_select(i)
+                )
+                row, col = divmod(idx, 3)
+                btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+                self.base_model_buttons.append(btn)
+                base_model_btn_frame.grid_rowconfigure(row, weight=1)
+
+            # Add custom base model button
+            custom_btn_idx = len(page_files)
+            row, col = divmod(custom_btn_idx, 3)
+            load_custom_btn = CTkButton(
                 base_model_btn_frame,
-                image=tk_img,
-                text=step_path,
-                width=40,
-                height=40,
+                text="+",
+                width=btn_size,
+                height=btn_size,
                 fg_color="gray20",
                 border_width=3,
-                border_color="green" if idx == 0 else "gray50",
-                command=lambda i=idx: on_base_model_select(i)
+                corner_radius=12,
+                border_color="gray50",
+                command=load_custom_step
             )
-            row, col = divmod(idx, 3)
-            btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-            self.base_model_buttons.append(btn)
+            load_custom_btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+            self.load_custom_btn = load_custom_btn
             base_model_btn_frame.grid_rowconfigure(row, weight=1)
 
-        # Button to load a custom .step file (always last, next row if needed)
+            # Pagination controls (place directly below base model buttons)
+            pagination_frame = CTkFrame(self.left_panel, fg_color="transparent")
+            # Use pack_forget to remove if it exists elsewhere
+            pagination_frame.pack_forget()
+            # Place below the base_model_btn_frame using .pack (before download button)
+            pagination_frame.pack(after=self.base_model_btn_frame, pady=(5, 0))
+            self.pagination_frame = pagination_frame
+            prev_btn = CTkButton(pagination_frame, text="<", width=32, command=go_prev_page)
+            prev_btn.pack(side="left", padx=5)
+            page_label = CTkLabel(pagination_frame, text=f"Page {self.base_model_page+1}/{total_pages}")
+            page_label.pack(side="left", padx=5)
+            next_btn = CTkButton(pagination_frame, text=">", width=32, command=go_next_page)
+            next_btn.pack(side="left", padx=5)
+            prev_btn.configure(state="normal" if self.base_model_page > 0 else "disabled")
+            next_btn.configure(state="normal" if self.base_model_page < total_pages-1 else "disabled")
+
+        def go_prev_page():
+            if self.base_model_page > 0:
+                self.base_model_page -= 1
+                update_base_model_buttons()
+
+        def go_next_page():
+            step_files = scan_base_models()
+            total_pages = max(1, (len(step_files) + self.base_models_per_page - 1) // self.base_models_per_page)
+            if self.base_model_page < total_pages-1:
+                self.base_model_page += 1
+                update_base_model_buttons()
+
+        def on_base_model_select(idx):
+            step_files = scan_base_models()
+            if 0 <= idx < len(step_files):
+                self.selected_base_model = step_files[idx]
+                update_base_model_buttons()
+                self.update_model_preview()
+
         def load_custom_step():
             file_path = filedialog.askopenfilename(
                 title="Select STEP file",
                 filetypes=[("STEP files", "*.step")]
             )
             if file_path:
-                self.selected_base_model = file_path
-                for btn in self.base_model_buttons:
-                    btn.configure(border_color="gray50")
-                self.update_model_preview()
+                # Copy the file to base_models folder
+                import shutil
+                dest_path = os.path.join(self.base_models_dir, os.path.basename(file_path))
+                try:
+                    shutil.copy(file_path, dest_path)
+                    self.selected_base_model = dest_path
+                    update_base_model_buttons()
+                    self.update_model_preview()
+                except Exception as e:
+                    print(f"Failed to copy file: {e}")
 
-        custom_btn_idx = len(step_files)
-        row, col = divmod(custom_btn_idx, 3)
-        load_custom_btn = CTkButton(
-            base_model_btn_frame,
-            text="+",
-            width=btn_size,
-            height=btn_size,
-            fg_color="gray20",
-            border_width=3,
-            border_color="gray50",
-            command=load_custom_step
+        scan_base_models()
+        update_base_model_buttons()
+        
+                # Add a button below the grid to download the blank base model
+        def download_blank_model():
+            blank_model_path = os.path.join("assets", "blank_base_model.step")
+            if not os.path.exists(blank_model_path):
+                print("Blank model not found.")
+                return
+            save_path = filedialog.asksaveasfilename(
+                defaultextension=".step",
+                filetypes=[("STEP files", "*.step")],
+                title="Save Blank Base Model As",
+                initialfile="blank_base_model.step"
+            )
+            if save_path:
+                with open(blank_model_path, "rb") as src, open(save_path, "wb") as dst:
+                    dst.write(src.read())
+                print(f"Blank base model saved to {save_path}")
+
+        download_blank_btn = CTkButton(
+            self.left_panel,
+            text="Download Blank Base Model",
+            font=("Arial", 14),
+            border_width=1,
+            corner_radius=12,
+            fg_color="gray30",
+            hover_color="#1ED760",
+            border_color="#1ED760",
+            text_color="white",
+            width=(self.window_width // 4),
+            height=32,
+            command=download_blank_model
         )
-        load_custom_btn.grid(row=row, column=col, sticky="nsew")
-        base_model_btn_frame.grid_rowconfigure(row, weight=1)
+        download_blank_btn.pack(pady=(10, 0), padx=10)
         # --- End Base Model Selection ---
         
         # Add an apply button
@@ -203,13 +306,14 @@ class TagifyApp(CTk):
             self.left_panel, 
             text="Generate Model",
             font=("Arial bold", 18),
-            fg_color="transparent",
             border_width=2,
+            corner_radius=12,
+            fg_color="transparent",
             hover_color="#1ED760",
             border_color="#1ED760",
             text_color="white",
-            width=self.left_panel.winfo_width() // 2,
-            height=20,
+            width=(self.window_width // 4),
+            height=40,
             command=self.export_model
         )
         generate_btn.pack(pady=20, padx=10)
@@ -219,12 +323,14 @@ class TagifyApp(CTk):
             self.left_panel, 
             text="Back to Home",
             font=("Arial bold", 18),
-            fg_color="#1ED760",
             border_width=2,
+            corner_radius=12,
+            fg_color="transparent",
+            hover_color="#1ED760",
             border_color="#1ED760",
             text_color="white",
-            width=self.left_panel.winfo_width()// 2,
-            height=20,
+            width=(self.window_width // 4),
+            height=40,
             command=self.show_home_page
         )
         back_btn.pack(pady=5, padx=10)
@@ -241,7 +347,7 @@ class TagifyApp(CTk):
         
         # The model preview
         self.preview_frame = CTkFrame(self.right_panel, fg_color="gray50")
-        self.preview_frame.pack(expand=True, fill="both", pady=10, padx=10)
+        self.preview_frame.pack(expand=True, fill="both", pady=10, padx=10) 
         
         # Configure grid for root window
         self.grid_rowconfigure(0, weight=1)
@@ -256,19 +362,26 @@ class TagifyApp(CTk):
         if hasattr(self, "_last_btn_size") and self._last_btn_size == new_btn_size:
             return
         self._last_btn_size = new_btn_size
-        # Re-create base model buttons with new size
         # Remove old buttons
         for btn in getattr(self, "base_model_buttons", []):
             btn.destroy()
+        self.base_model_buttons = []
         # Remove custom button if exists
         if hasattr(self, "load_custom_btn"):
             self.load_custom_btn.destroy()
-        # Recreate buttons
-        base_model_btn_frame = self.left_panel.winfo_children()[1]
+        # Recreate buttons for the current page only
+        base_model_btn_frame = self.base_model_btn_frame
         for widget in base_model_btn_frame.winfo_children():
             widget.destroy()
         base_model_btn_frame.grid_columnconfigure((0, 1, 2), weight=1)
-        for idx, step_path in enumerate(self.base_model_paths):
+        # Pagination logic
+        step_files = self.base_model_paths
+        total_pages = max(1, (len(step_files) + self.base_models_per_page - 1) // self.base_models_per_page)
+        self.base_model_page = min(self.base_model_page, total_pages - 1)
+        start_idx = self.base_model_page * self.base_models_per_page
+        end_idx = start_idx + self.base_models_per_page
+        page_files = step_files[start_idx:end_idx]
+        for idx, step_path in enumerate(page_files):
             img_path = os.path.splitext(step_path)[0] + ".png"
             if os.path.exists(img_path):
                 img = Image.open(img_path)
@@ -289,15 +402,15 @@ class TagifyApp(CTk):
                 height=new_btn_size + 4,
                 fg_color="gray20",
                 border_width=3,
-                border_color="green" if self.selected_base_model == self.base_model_paths[idx] else "gray50",
-                command=lambda i=idx: self._on_base_model_select_resize(i)
+                border_color="green" if self.selected_base_model == step_path else "gray50",
+                command=lambda i=start_idx+idx: self._on_base_model_select_resize(i)
             )
             row, col = divmod(idx, 3)
             btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-            self.base_model_buttons[idx] = btn
+            self.base_model_buttons.append(btn)
             base_model_btn_frame.grid_rowconfigure(row, weight=1)
         # Custom button
-        custom_btn_idx = len(self.base_model_paths)
+        custom_btn_idx = len(page_files)
         row, col = divmod(custom_btn_idx, 3)
         load_custom_btn = CTkButton(
             base_model_btn_frame,
@@ -307,11 +420,12 @@ class TagifyApp(CTk):
             fg_color="gray20",
             border_width=3,
             border_color="gray50",
-            command=self.base_model_buttons[0].cget("command") if self.base_model_buttons else None
+            command=self.load_custom_btn.cget("command") if hasattr(self, "load_custom_btn") else None
         )
         load_custom_btn.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
         self.load_custom_btn = load_custom_btn
         base_model_btn_frame.grid_rowconfigure(row, weight=1)
+        # (Optional: update pagination controls position/size if needed)
 
     def _on_base_model_select_resize(self, idx):
         self.selected_base_model = self.base_model_paths[idx]
@@ -387,7 +501,7 @@ class TagifyApp(CTk):
         self.update_model_preview()
     
     def generate_model_without_export(self):
-        """Generate the model in memory without exporting it."""
+        """Generate the model in memory without exporting it.""" 
         if not self.bar_heights or not self.selected_base_model:
             return None
 
@@ -445,44 +559,97 @@ class TagifyApp(CTk):
         cq.exporters.export(model, file_path, exportType='STL')
         print(f"Model exported as {file_path}")
 
-    def update_model_preview(self):
-        """Update the 3D preview in the preview frame."""
-        # Clear the preview frame
+    def show_loading_gif(self):
+        """Display a loading GIF in the preview frame (optimized for speed)."""
         for widget in self.preview_frame.winfo_children():
             widget.destroy()
-
-        # Generate the model in memory
-        model = self.generate_model_without_export()
-        if not model:
-            print("No model to preview.")
+        gif_path = os.path.join("assets", "loading.gif")
+        if not os.path.exists(gif_path):
+            label = CTkLabel(self.preview_frame, text="Loading...", font=("Arial", 18))
+            label.pack(expand=True)
             return
 
-        # Export the model to a temporary STL file
-        temp_stl_path = "temp_preview_model.stl"
-        cq.exporters.export(model, temp_stl_path)
+        # Use a regular tkinter Label for GIF animation
+        from tkinter import Label
+        try:
+            gif = Image.open(gif_path)
+            # Only load the first few frames to speed up initial display
+            frames = []
+            for _ in range(10):  # Load up to 10 frames quickly
+                frames.append(ImageTk.PhotoImage(gif.copy()))
+                gif.seek(gif.tell() + 1)
+        except Exception:
+            frames = []
 
-        # Use PyVista to render the STL file and save it as an image
-        plotter = pv.Plotter(off_screen=True)
-        plotter.add_mesh(pv.read(temp_stl_path), color="white")
-        plotter.set_background("black")
-        temp_image_path = "temp_preview_image.png"
-        plotter.screenshot(temp_image_path)
-        plotter.close()
+        if not frames:
+            label = CTkLabel(self.preview_frame, text="Loading...", font=("Arial", 18))
+            label.pack(expand=True)
+            return
 
-        # Display the image in the preview frame using matplotlib
-        fig = Figure(figsize=(5, 5), dpi=100)
-        ax = fig.add_subplot(111)
-        img = plt.imread(temp_image_path)
-        ax.imshow(img)
-        ax.axis("off")  # Hide axes
+        gif_label = Label(self.preview_frame, bg="black")
+        gif_label.pack(expand=True, fill="both")
+        self._gif_frames = frames
+        self._gif_label = gif_label
+        self._gif_frame_idx = 0
 
-        canvas = FigureCanvasTkAgg(fig, master=self.preview_frame)
-        canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack(expand=True, fill="both", pady=10, padx=10)
+        def animate():
+            if hasattr(self, "_gif_frames"):
+                frame = self._gif_frames[self._gif_frame_idx]
+                self._gif_label.configure(image=frame)
+                self._gif_frame_idx = (self._gif_frame_idx + 1) % len(self._gif_frames)
+                self._gif_label.after(60, animate)
+        animate()
 
-        # Clean up temporary files
-        os.remove(temp_stl_path)
-        os.remove(temp_image_path)
+    def update_model_preview(self):
+        """Update the 3D preview in the preview frame with a loading indicator."""
+        
+
+        def generate_and_show():
+            # Generate the model in memory
+            model = self.generate_model_without_export()
+            if not model:
+                print("No model to preview.")
+                # Remove GIF and show error
+                self.after(0, lambda: [
+                    widget.destroy() for widget in self.preview_frame.winfo_children()
+                ])
+                self.after(0, lambda: CTkLabel(self.preview_frame, text="No model to preview.", font=("Arial", 18)).pack(expand=True))
+                return
+
+            # Export the model to a temporary STL file
+            temp_stl_path = "temp_preview_model.stl"
+            cq.exporters.export(model, temp_stl_path)
+
+            # Use PyVista to render the STL file and save it as an image
+            plotter = pv.Plotter(off_screen=True)
+            plotter.add_mesh(pv.read(temp_stl_path), color="white")
+            plotter.set_background("black")
+            temp_image_path = "temp_preview_image.png"
+            plotter.screenshot(temp_image_path)
+            plotter.close()
+
+            # Display the image in the preview frame using matplotlib
+            def show_image():
+                for widget in self.preview_frame.winfo_children():
+                    widget.destroy()
+                fig = Figure(figsize=(5, 5), dpi=100)
+                ax = fig.add_subplot(111)
+                img = plt.imread(temp_image_path)
+                ax.imshow(img)
+                ax.axis("off")  # Hide axes
+
+                canvas = FigureCanvasTkAgg(fig, master=self.preview_frame)
+                canvas_widget = canvas.get_tk_widget()
+                canvas_widget.pack(expand=True, fill="both", pady=10, padx=10)
+
+                # Clean up temporary files
+                os.remove(temp_stl_path)
+                os.remove(temp_image_path)
+
+            self.after(0, show_image)
+
+        # Run model generation in a background thread
+        threading.Thread(target=generate_and_show, daemon=True).start()
 
 
 if __name__ == "__main__":
