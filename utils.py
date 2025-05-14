@@ -10,16 +10,15 @@ def open_link(url):
     """
     webbrowser.open(url)
 
-def get_link_data(link):
+def get_link_data(share_link):
     """
-    Returns a tuple (type, URI) parsed from the input link.
-    The type may be "track", "album", "artist", or "playlist".
+    Parse the Spotify share link and return relevant data.
     """
     # First, remove any query parameters
-    link = link.split('?')[0]
+    share_link = share_link.split('?')[0]
 
     # Next, split the URL into parts
-    parts = link.split('/')
+    parts = share_link.split('/')
 
     # Check for the presence of "track", "album", "artist", or "playlist"
     for i, part in enumerate(parts):

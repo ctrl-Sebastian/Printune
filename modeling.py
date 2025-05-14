@@ -32,5 +32,4 @@ def export_model(model, file_path):
     """
     Export the given CadQuery model to an STL file.
     """
-    import cadquery as cq
     cq.exporters.export(model, file_path, exportType='STL')
