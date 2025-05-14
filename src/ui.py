@@ -10,8 +10,8 @@ from PIL import Image, ImageTk
 from tkinter import filedialog
 import os
 import threading
-import utils
-import modeling
+import src.utils as utils
+import src.modeling as modeling
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -132,7 +132,7 @@ class TagifyApp(CTk):
         base_model_btn_frame.pack(pady=0, padx=0, fill="none", expand=True)
         base_model_btn_frame.grid_columnconfigure((0, 1, 2), weight=1)  # 3 columns
         self.base_model_btn_frame = base_model_btn_frame  # Store reference
-
+        self.selected_base_model = scan_base_models()[0]
         # Do NOT create any base model buttons here!
         # Only call update_base_model_buttons() after scan_base_models()
 
