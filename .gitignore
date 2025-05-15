@@ -33,5 +33,6 @@ htmlcov/
 
 build
 dist
-.spec
+*.spec
 .venv
+output
