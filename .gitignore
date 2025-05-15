@@ -30,3 +30,8 @@ htmlcov/
 *.tar.gz
 *.zip
 *.ipynb_checkpoints
+
+build
+dist
+.spec
+.venv
