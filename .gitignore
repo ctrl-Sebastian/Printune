@@ -31,8 +31,5 @@ htmlcov/
 *.zip
 *.ipynb_checkpoints
 
-build
-dist
-*.spec
 .venv
 output
