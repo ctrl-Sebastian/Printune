@@ -1,7 +1,3 @@
-"""
-utils.py - Utility functions for Tagify.
-"""
-
 import webbrowser
 import os
 import sys
@@ -18,15 +14,9 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def open_link(url):
-    """
-    Open the given URL in the default web browser.
-    """
     webbrowser.open(url)
 
 def get_link_data(share_link):
-    """
-    Parse the Spotify share link and return relevant data.
-    """
     # First, remove any query parameters
     share_link = share_link.split('?')[0]
 

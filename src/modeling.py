@@ -1,7 +1,3 @@
-"""
-modeling.py - Handles 3D model generation and export for Tagify.
-"""
-
 import cadquery as cq
 
 def generate_model_without_export(bar_heights, selected_base_model):

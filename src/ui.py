@@ -1,7 +1,3 @@
-"""
-ui.py - Contains the TagifyApp class and all UI logic for the Tagify application.
-"""
-
 import io
 import pyvista as pv
 from customtkinter import *
@@ -18,10 +14,6 @@ from matplotlib.figure import Figure
 import glob
 
 class TagifyApp(CTk):
-    """
-    Main application class for Tagify.
-    Handles all UI components and user interactions.
-    """
     def __init__(self):
         super().__init__()
         set_appearance_mode("dark")

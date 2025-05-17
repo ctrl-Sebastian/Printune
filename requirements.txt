@@ -1,7 +1,0 @@
-cadquery
-requests
-pillow
-matplotlib
-pyvista
-pyvistaqt
-customtkinter
