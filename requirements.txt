@@ -1,0 +1,4 @@
+pyvista
+customtkinter
+cadquery
+pyinstaller
