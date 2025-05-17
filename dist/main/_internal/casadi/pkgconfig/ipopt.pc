@@ -11,5 +11,5 @@ Version: 3.14.11
 Cflags: -I${includedir}
 Libs: -L${libdir} -lipopt
 Requires.private:  
-#Libs: -L${libdir} -lipopt -L/work/build/external_projects/lib -lspral -lgfortran -lm -lcoinmetis  -L/work/build/external_projects/bin -lcasadi-tp-openblas -L/work/build/external_projects/lib -Wl,--whole-archive -lcoinmumps -Wl,--no-whole-archive    -L/work/build/external_projects/bin -lcasadi-tp-openblas 
+#Libs: -L${libdir} -lipopt -L/work/build/external_projects/lib -lspral -lgfortran -lm -lcoinmetis  -L/work/build/external_projects/lib -lcasadi-tp-openblas -L/work/build/external_projects/lib -Wl,--whole-archive -lcoinmumps -Wl,--no-whole-archive    -L/work/build/external_projects/lib -lcasadi-tp-openblas -lm  -ldl
 #Requires:  

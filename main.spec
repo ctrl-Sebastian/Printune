@@ -4,12 +4,12 @@
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[(r'C:/Users/sebas/projects/tagify_executable/.venv/lib/site-packages/casadi/', 'casadi')],
+    binaries=[(r'/home/sebastian/projects/Tagify/venv/lib/python3.10/site-packages/casadi/', 'casadi')],
     datas=[
         ('assets', 'assets'),
         ('base_models', 'base_models'),
     ],
-    hiddenimports=['OCP', 'casadi._casadi', '_casadi'],
+    hiddenimports=['OCP', 'casadi._casadi', '_casadi', 'PIL._tkinter_finder'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

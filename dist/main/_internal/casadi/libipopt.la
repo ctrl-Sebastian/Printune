@@ -5,10 +5,10 @@
 # It is necessary for linking the library.
 
 # The name that we can dlopen(3).
-dlname='../bin/libipopt-3.dll'
+dlname='libipopt.so.3'
 
 # Names of this library.
-library_names='libipopt.dll.a'
+library_names='libipopt.so.3.14.11 libipopt.so.3 libipopt.so'
 
 # The name of the static archive.
 old_library=''
@@ -17,7 +17,7 @@ old_library=''
 inherited_linker_flags=''
 
 # Libraries that this one depends upon.
-dependency_libs=' -L/work/build/external_projects/lib -lspral -L/usr/src/mxe/usr/mingw/lib -L/work/build/external_projects/bin /work/build/external_projects/lib/libcoinmumps.la /work/build/external_projects/lib/libcoinmetis.la /usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/libgfortran.la /usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/libquadmath.la -lcasadi-tp-openblas /usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/libstdc++.la /usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/libssp.la'
+dependency_libs=' -L/work/build/external_projects/lib -lspral /work/build/external_projects/lib/libcoinmumps.la /work/build/external_projects/lib/libcoinmetis.la -lgfortran -lquadmath -lpthread -lcasadi-tp-openblas -ldl'
 
 # Names of additional weak libraries provided by this library
 weak_library_names=''

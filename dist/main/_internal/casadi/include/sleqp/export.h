@@ -9,15 +9,15 @@
 #  ifndef SLEQP_EXPORT
 #    ifdef sleqp_EXPORTS
         /* We are building this library */
-#      define SLEQP_EXPORT __declspec(dllexport)
+#      define SLEQP_EXPORT __attribute__((visibility("default")))
 #    else
         /* We are using this library */
-#      define SLEQP_EXPORT __declspec(dllimport)
+#      define SLEQP_EXPORT __attribute__((visibility("default")))
 #    endif
 #  endif
 
 #  ifndef SLEQP_NO_EXPORT
-#    define SLEQP_NO_EXPORT 
+#    define SLEQP_NO_EXPORT __attribute__((visibility("hidden")))
 #  endif
 #endif
 

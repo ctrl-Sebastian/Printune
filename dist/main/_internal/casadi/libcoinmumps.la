@@ -5,10 +5,10 @@
 # It is necessary for linking the library.
 
 # The name that we can dlopen(3).
-dlname='../bin/libcoinmumps-3.dll'
+dlname='libcoinmumps.so.3'
 
 # Names of this library.
-library_names='libcoinmumps.dll.a'
+library_names='libcoinmumps.so.3.0.1 libcoinmumps.so.3 libcoinmumps.so'
 
 # The name of the static archive.
 old_library=''
@@ -17,7 +17,7 @@ old_library=''
 inherited_linker_flags=''
 
 # Libraries that this one depends upon.
-dependency_libs=' -L/work/build/external_projects/lib /work/build/external_projects/lib/libcoinmetis.la -L/work/build/external_projects/bin -lcasadi-tp-openblas -L/usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0 -L/usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/../../../../x86_64-w64-mingw32.shared.posix/lib/../lib -L/usr/src/mxe/usr/x86_64-w64-mingw32.shared.posix/lib/../lib -L/usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/../../../../x86_64-w64-mingw32.shared.posix/lib -L/usr/src/mxe/usr/x86_64-w64-mingw32.shared.posix/lib /usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/libgfortran.la -L/usr/src/mxe/usr/mingw/lib -lmingw32 -lmoldname -lmingwex /usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/libssp.la -lmsvcrt -lkernel32 /usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/libquadmath.la -ladvapi32 -lshell32 -luser32 -lpthread'
+dependency_libs=' -L/work/build/external_projects/lib /work/build/external_projects/lib/libcoinmetis.la -lcasadi-tp-openblas -L/opt/rh/devtoolset-10/root/usr/lib/gcc/x86_64-redhat-linux/10 -L/opt/rh/devtoolset-10/root/usr/lib/gcc/x86_64-redhat-linux/10/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/devtoolset-10/root/usr/lib/gcc/x86_64-redhat-linux/10/../../.. -lgfortran -lm -lquadmath -lpthread'
 
 # Names of additional weak libraries provided by this library
 weak_library_names=''

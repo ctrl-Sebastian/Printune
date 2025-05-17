@@ -17,7 +17,7 @@ class TagifyApp(CTk):
     def __init__(self):
         super().__init__()
         set_appearance_mode("dark")
-        self.iconbitmap(utils.resource_path("icon.ico"))
+        #self.iconbitmap(utils.resource_path("icon.ico"))
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
         self.window_width = int(self.screen_width * 0.8)

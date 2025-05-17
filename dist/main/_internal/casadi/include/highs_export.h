@@ -9,15 +9,15 @@
 #  ifndef HIGHS_EXPORT
 #    ifdef highs_EXPORTS
         /* We are building this library */
-#      define HIGHS_EXPORT __declspec(dllexport)
+#      define HIGHS_EXPORT __attribute__((visibility("default")))
 #    else
         /* We are using this library */
-#      define HIGHS_EXPORT __declspec(dllimport)
+#      define HIGHS_EXPORT __attribute__((visibility("default")))
 #    endif
 #  endif
 
 #  ifndef HIGHS_NO_EXPORT
-#    define HIGHS_NO_EXPORT 
+#    define HIGHS_NO_EXPORT __attribute__((visibility("hidden")))
 #  endif
 #endif
 

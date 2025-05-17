@@ -8,12 +8,12 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 # Import target "casadi::casadi" for configuration "Release"
 set_property(TARGET casadi::casadi APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(casadi::casadi PROPERTIES
-  IMPORTED_IMPLIB_RELEASE "${_IMPORT_PREFIX}/casadi/libcasadi${CMAKE_IMPORT_LIBRARY_SUFFIX}"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/casadi/libcasadi.dll"
+  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/casadi/libcasadi.so.3.7"
+  IMPORTED_SONAME_RELEASE "libcasadi.so.3.7"
   )
 
-list(APPEND _IMPORT_CHECK_TARGETS casadi::casadi )
-list(APPEND _IMPORT_CHECK_FILES_FOR_casadi::casadi "${_IMPORT_PREFIX}/casadi/libcasadi${CMAKE_IMPORT_LIBRARY_SUFFIX}" "${_IMPORT_PREFIX}/casadi/libcasadi.dll" )
+list(APPEND _cmake_import_check_targets casadi::casadi )
+list(APPEND _cmake_import_check_files_for_casadi::casadi "${_IMPORT_PREFIX}/casadi/libcasadi.so.3.7" )
 
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)

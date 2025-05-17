@@ -9,15 +9,15 @@
 #  ifndef ALPAQA_EXPORT
 #    ifdef alpaqa_EXPORTS
         /* We are building this library */
-#      define ALPAQA_EXPORT __declspec(dllexport)
+#      define ALPAQA_EXPORT __attribute__((visibility("default")))
 #    else
         /* We are using this library */
-#      define ALPAQA_EXPORT __declspec(dllimport)
+#      define ALPAQA_EXPORT __attribute__((visibility("default")))
 #    endif
 #  endif
 
 #  ifndef ALPAQA_NO_EXPORT
-#    define ALPAQA_NO_EXPORT 
+#    define ALPAQA_NO_EXPORT __attribute__((visibility("hidden")))
 #  endif
 #endif
 

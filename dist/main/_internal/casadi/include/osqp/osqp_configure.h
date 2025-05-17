@@ -9,9 +9,9 @@ extern "C" {
 /* #undef DEBUG */
 
 /* Operating system */
-/* #undef IS_LINUX */
+#define IS_LINUX
 /* #undef IS_MAC */
-#define IS_WINDOWS
+/* #undef IS_WINDOWS */
 
 /* EMBEDDED */
 /* #undef EMBEDDED */

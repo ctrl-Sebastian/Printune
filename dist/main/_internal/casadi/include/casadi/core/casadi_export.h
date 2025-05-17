@@ -9,15 +9,15 @@
 #  ifndef CASADI_EXPORT
 #    ifdef casadi_EXPORTS
         /* We are building this library */
-#      define CASADI_EXPORT __declspec(dllexport)
+#      define CASADI_EXPORT __attribute__((visibility("default")))
 #    else
         /* We are using this library */
-#      define CASADI_EXPORT __declspec(dllimport)
+#      define CASADI_EXPORT __attribute__((visibility("default")))
 #    endif
 #  endif
 
 #  ifndef CASADI_NO_EXPORT
-#    define CASADI_NO_EXPORT 
+#    define CASADI_NO_EXPORT __attribute__((visibility("hidden")))
 #  endif
 #endif
 

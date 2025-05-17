@@ -11,5 +11,5 @@ Version: 3.0.1
 Cflags: -I${includedir}
 Libs: -L${libdir} -lcoinmumps
 Requires.private: 
-#Libs: -L${libdir} -lcoinmumps -L/work/build/external_projects/lib -lcoinmetis -lm  -L/work/build/external_projects/bin -lcasadi-tp-openblas   -L/usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0 -L/usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/../../../../x86_64-w64-mingw32.shared.posix/lib/../lib -L/usr/src/mxe/usr/x86_64-w64-mingw32.shared.posix/lib/../lib -L/usr/src/mxe/usr/lib/gcc/x86_64-w64-mingw32.shared.posix/11.2.0/../../../../x86_64-w64-mingw32.shared.posix/lib -L/usr/src/mxe/usr/x86_64-w64-mingw32.shared.posix/lib -lgfortran -lmingw32 -lmoldname -lmingwex -lssp_nonshared -lssp -lmsvcrt -lkernel32 -lquadmath -lm -lpthread -ladvapi32 -lshell32 -luser32 -lpthread 
+#Libs: -L${libdir} -lcoinmumps -L/work/build/external_projects/lib -lcoinmetis -lm  -L/work/build/external_projects/lib -lcasadi-tp-openblas   -L/opt/rh/devtoolset-10/root/usr/lib/gcc/x86_64-redhat-linux/10 -L/opt/rh/devtoolset-10/root/usr/lib/gcc/x86_64-redhat-linux/10/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/opt/rh/devtoolset-10/root/usr/lib/gcc/x86_64-redhat-linux/10/../../.. -lgfortran -lm -lquadmath -lpthread 
 #Requires: 
