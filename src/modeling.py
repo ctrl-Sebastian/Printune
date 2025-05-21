@@ -1,6 +1,6 @@
 import cadquery as cq
 
-def generate_model_without_export(bar_heights, selected_base_model):
+def generate_model_without_export(bar_heights, selected_base_model, extrusion_height=4):
     """
     Generate the model in memory without exporting it.
     Returns a CadQuery Workplane object.
@@ -16,7 +16,7 @@ def generate_model_without_export(bar_heights, selected_base_model):
                 .sketch()
                 .slot(9 / 5 * bar, 1, 90)
                 .finalize()
-                .extrude(4)
+                .extrude(extrusion_height)
             )
             curr_bar += 1
         return model

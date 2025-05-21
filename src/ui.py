@@ -28,6 +28,7 @@ class TagifyApp(CTk):
         self.title("Tagify")
 
         # State
+        self.extrusion_height = 4
         self.spotify_data = None
         self.bar_heights = None
         self.selected_base_model = None
@@ -129,6 +130,43 @@ class TagifyApp(CTk):
         # Do NOT create any base model buttons here!
         # Only call update_base_model_buttons() after scan_base_models()
 
+        extrusion_slider_frame = CTkFrame(self.left_panel, fg_color="transparent")
+        extrusion_slider_frame.pack(fill="x", pady=(15,5), padx=20)
+        
+        extrusion_slider_label = CTkLabel(
+            extrusion_slider_frame,
+            text="Bar Extrusion Height",
+            font=("Arial", 14),
+        )
+        extrusion_slider_label.pack(side="top", anchor="w")
+        
+        extrusion_value_label = CTkLabel(
+            extrusion_slider_frame,
+            text=f"{self.extrusion_height} mm",
+            font=("Arial", 14),
+            width=100,
+        )
+        
+        extrusion_value_label.pack(side="right", padx=(5,0))
+        
+        def on_extrusion_slider_change(value):
+            self.extrusion_height = round(float(value), 1)
+            extrusion_value_label.configure(text=f"{self.extrusion_height} mm")
+            self.update_model_preview()
+        
+        extrusion_slider = CTkSlider(
+            extrusion_slider_frame,
+            from_=self.extrusion_height,
+            to=5,
+            number_of_steps=45,
+            command=on_extrusion_slider_change,
+        )
+        
+        extrusion_slider.set(self.extrusion_height)
+        extrusion_slider.pack(side="left", fill="x", expand=True, padx=(0, 5))  
+        
+        self.extrusion_slider_frame = extrusion_slider_frame
+
         def update_base_model_buttons():
             # Only destroy base model buttons (not the whole left panel)
             for btn in getattr(self, "base_model_buttons", []):
@@ -217,6 +255,10 @@ class TagifyApp(CTk):
             next_btn.pack(side="left", padx=5)
             prev_btn.configure(state="normal" if self.base_model_page > 0 else "disabled")
             next_btn.configure(state="normal" if self.base_model_page < total_pages-1 else "disabled")
+            
+            pagination_frame.pack_forget() 
+            pagination_frame.pack(after=self.extrusion_slider_frame, pady=(5, 0))
+            self.pagination_frame = pagination_frame
 
         def go_prev_page():
             if self.base_model_page > 0:
@@ -257,9 +299,11 @@ class TagifyApp(CTk):
         scan_base_models()
         update_base_model_buttons()
         
+        
+        
         # Add a button below the grid to download the blank base model
         def download_blank_model():
-            blank_model_path = os.path.join("assets", "blank_base_model.step")
+            blank_model_path = utils.resource_path(os.path.join("assets", "blank_base_model.step"))
             if not os.path.exists(blank_model_path):
                 print("Blank model not found.")
                 return
@@ -495,7 +539,11 @@ class TagifyApp(CTk):
             print("No data to generate model from")
             return
         
-        model = modeling.generate_model_without_export(self.bar_heights, self.selected_base_model)
+        model = modeling.generate_model_without_export(
+            self.bar_heights, 
+            self.selected_base_model, 
+            self.extrusion_height
+        )
         
         # Ask user for save location
         file_path = filedialog.asksaveasfilename(
@@ -553,12 +601,13 @@ class TagifyApp(CTk):
         animate()
 
     def update_model_preview(self):
-        """Update the 3D preview in the preview frame with a loading indicator."""
-        
-
         def generate_and_show():
             # Generate the model in memory
-            model = modeling.generate_model_without_export(self.bar_heights, self.selected_base_model)
+            model = modeling.generate_model_without_export(
+                self.bar_heights, 
+                self.selected_base_model,
+                self.extrusion_height
+            )
             if not model:
                 print("No model to preview.")
                 # Remove GIF and show error
