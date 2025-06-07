@@ -1,13 +1,13 @@
-# Tagify
+# Printune
 
-Tagify is a desktop application for generating 3D printable Spotify code tags.
+Printune is a desktop application for generating 3D printable Spotify code tags.
 
 ---
 
 ## Project Structure
 
 - `main.py` - Entry point. Starts the application.
-- `ui.py` - Contains the `TagifyApp` class and all UI logic.
+- `ui.py` - Contains the `PrintuneApp` class and all UI logic.
 - `modeling.py` - Handles 3D model generation and export.
 - `utils.py` - Utility functions (Spotify parsing, web links, etc).
 - `assets/` - Contains images, GIFs, and base models.
@@ -20,14 +20,14 @@ Tagify is a desktop application for generating 3D printable Spotify code tags.
 ### `main.py`
 
 - **No user-defined functions.**  
-  This file only imports and runs `TagifyApp` from `ui.py`.
+  This file only imports and runs `PrintuneApp` from `ui.py`.
 
 ---
 
 ### `ui.py`
 
-#### class TagifyApp(CTk)
-Main application class for Tagify. Handles all UI components and user interactions.
+#### class PrintuneApp(CTk)
+Main application class for Printune. Handles all UI components and user interactions.
 
 - **`__init__(self)`**  
   Initializes the main window, sets up state variables, and calls `create_frames()` and `show_home_page()`.
@@ -95,19 +95,66 @@ Parse the Spotify share link and return relevant data.
 
 ---
 
+## Requirements
+
+- Python 3.8 or higher
+- Internet connection (for fetching Spotify codes)
+- Dependencies listed in `requirements.txt`
+
+## Installation
+
+1. Clone this repository:
+   ```
+   git clone https://github.com/yourusername/Printune.git
+   cd Printune
+   ```
+
+2. Install required dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
 ## How to Run
 
-1. Install dependencies: `pip install -r requirements.txt`
-2. Run: `python main.py`
+1. Launch the application:
+   ```
+   python main.py
+   ```
 
----
+2. The main window will appear with a welcome screen.
 
-## How it Works
+## Usage Guide
 
-1. Enter a Spotify share link.
-2. The app fetches the Spotify code and processes it.
-3. Select a base model or upload your own.
-4. Preview and export the 3D model.
+1. **Input a Spotify Link**
+   - Paste a Spotify share URL for any track, album, or playlist
+   - Click "Generate" to process the link
+
+2. **Customize Your Model**
+   - Select from available base models in the gallery
+   - Adjust any customization options
+   - Preview the model in real-time
+
+3. **Export and Print**
+   - Click "Export" to save your model as an STL file
+   - Open the STL file with your preferred slicer software
+   - Print on your 3D printer with recommended settings:
+     - Layer Height: 0.2mm
+     - Infill: 15-20%
+     - Supports: As needed based on model complexity
+
+## Features
+
+- **Spotify Code Generation**: Automatically extracts code patterns from any Spotify link
+- **Multiple Base Models**: Choose from several pre-designed bases for your code
+- **Real-time 3D Preview**: See your model before exporting
+- **Custom Model Support**: Import your own base models (STEP format)
+- **STL Export**: Export directly to 3D-printable STL format
+
+## Troubleshooting
+
+- **Invalid URL Error**: Ensure you're using a proper Spotify share link
+- **Model Generation Failure**: Check your internet connection
+- **Preview Not Showing**: Make sure all dependencies are correctly installed
 
 ---
 
