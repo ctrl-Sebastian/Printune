@@ -2,8 +2,16 @@
 
 Printune is a desktop application for generating 3D printable Spotify code tags.
 
+## Images
 ---
+![Main Menu](readme-images/MainMenu.png)
+*Main application welcome screen.*
 
+![Customization Panel](readme-images/CustomizationPanel.png)
+*Model customization options and preview.*
+
+![Ready To Print](readme-images/ReadyToPrint.png)
+*Example of a generated 3D model ready for export.*
 ## Project Structure
 
 - `main.py` - Entry point. Starts the application.
@@ -11,7 +19,7 @@ Printune is a desktop application for generating 3D printable Spotify code tags.
 - `modeling.py` - Handles 3D model generation and export.
 - `utils.py` - Utility functions (Spotify parsing, web links, etc).
 - `assets/` - Contains images, GIFs, and base models.
-- `base_models/` - STEP files for base models.
+- `base-models/` - STEP files for base models.
 
 ---
 
@@ -160,7 +168,7 @@ Parse the Spotify share link and return relevant data.
 
 ## Extending
 
-- Add new base models to `base_models/`.
+- Add new base models to `base-models/`.
 - Customize model generation in `modeling.py`.
 - UI changes go in `ui.py`.
 

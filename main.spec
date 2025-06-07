@@ -7,7 +7,7 @@ a = Analysis(
     binaries=[(r'C:/Users/sebas/projects/tagify_executable/.venv/lib/site-packages/casadi/', 'casadi')],
     datas=[
         ('assets', 'assets'),
-        ('base_models', 'base_models'),
+        ('base-models', 'base-models'),
     ],
     hiddenimports=['OCP', 'casadi._casadi', '_casadi'],
     hookspath=[],

@@ -112,7 +112,7 @@ class PrintuneApp(CTk):
         options_label.pack(pady=20, padx=10)
         
         # --- Base Model Selection ---
-        base_models_dir = utils.resource_path("base_models")
+        base_models_dir = utils.resource_path("base-models")
         self.base_models_dir = base_models_dir  # Store for later use
         self.base_models_per_page = 6  # Number of models per page
         self.base_model_page = 0  # Current page
@@ -285,7 +285,7 @@ class PrintuneApp(CTk):
                 filetypes=[("STEP files", "*.step")]
             )
             if file_path:
-                # Copy the file to base_models folder
+                # Copy the file to base-models folder
                 import shutil
                 dest_path = os.path.join(self.base_models_dir, os.path.basename(file_path))
                 try:
