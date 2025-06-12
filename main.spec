@@ -4,7 +4,7 @@
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[(r'C:/Users/sebas/projects/tagify_executable/.venv/lib/site-packages/casadi/', 'casadi')],
+    binaries=[(r'C:/Users/sebas/projects/Printune/.venv/lib/site-packages/casadi/', 'casadi')],
     datas=[
         ('assets', 'assets'),
         ('base-models', 'base-models'),
@@ -35,6 +35,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['icon.ico'],
 )
 coll = COLLECT(
     exe,
