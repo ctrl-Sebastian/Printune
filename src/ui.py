@@ -13,7 +13,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import glob
 
-class TagifyApp(CTk):
+class PrintuneApp(CTk):
     def __init__(self):
         super().__init__()
         set_appearance_mode("dark")
@@ -25,7 +25,7 @@ class TagifyApp(CTk):
         x = (self.screen_width - self.window_width) // 2
         y = (self.screen_height - self.window_height) // 2
         self.geometry(f"{self.window_width}x{self.window_height}+{x}+{y}")
-        self.title("Tagify")
+        self.title("Printune")
 
         # State
         self.spotify_data = None
@@ -47,7 +47,7 @@ class TagifyApp(CTk):
         self.home_frame.grid(row=0, column=0, sticky="nsew")
         
         # Create title
-        title = CTkLabel(self.home_frame, text="Tagify", font=("Arial bold", 64), text_color="#1ED760")
+        title = CTkLabel(self.home_frame, text="Printune", font=("Arial bold", 64), text_color="#1ED760")
         title.place(relx=0.5, rely=0.4, anchor=CENTER)
 
         # Create URL input field
@@ -605,5 +605,5 @@ class TagifyApp(CTk):
 
 
 if __name__ == "__main__":
-    app = TagifyApp()
+    app = PrintuneApp()
     app.mainloop()

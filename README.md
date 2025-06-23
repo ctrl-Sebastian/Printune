@@ -1,13 +1,13 @@
-# Tagify
+# Printune
 
-Tagify is a desktop application for generating 3D printable Spotify code tags.
+Printune is a desktop application for generating 3D printable Spotify code tags.
 
 ---
 
 ## Project Structure
 
 - `main.py` - Entry point. Starts the application.
-- `ui.py` - Contains the `TagifyApp` class and all UI logic.
+- `ui.py` - Contains the `PrintuneApp` class and all UI logic.
 - `modeling.py` - Handles 3D model generation and export.
 - `utils.py` - Utility functions (Spotify parsing, web links, etc).
 - `assets/` - Contains images, GIFs, and base models.
@@ -20,14 +20,14 @@ Tagify is a desktop application for generating 3D printable Spotify code tags.
 ### `main.py`
 
 - **No user-defined functions.**  
-  This file only imports and runs `TagifyApp` from `ui.py`.
+  This file only imports and runs `PrintuneApp` from `ui.py`.
 
 ---
 
 ### `ui.py`
 
-#### class TagifyApp(CTk)
-Main application class for Tagify. Handles all UI components and user interactions.
+#### class PrintuneApp(CTk)
+Main application class for Printune. Handles all UI components and user interactions.
 
 - **`__init__(self)`**  
   Initializes the main window, sets up state variables, and calls `create_frames()` and `show_home_page()`.

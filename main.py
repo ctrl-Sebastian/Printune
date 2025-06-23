@@ -1,5 +1,5 @@
-from src.ui import TagifyApp
+from src.ui import PrintuneApp
 
 if __name__ == "__main__":
-    app = TagifyApp()
+    app = PrintuneApp()
     app.mainloop()

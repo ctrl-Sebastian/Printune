@@ -4,7 +4,7 @@
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[(r'/home/sebastian/projects/Tagify/venv/lib/python3.10/site-packages/casadi/', 'casadi')],
+    binaries=[(r'/home/sebastian/projects/Printune/venv/lib/python3.10/site-packages/casadi/', 'casadi')],
     datas=[
         ('assets', 'assets'),
         ('base_models', 'base_models'),
@@ -24,7 +24,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='Tagify',
+    name='Printune',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
